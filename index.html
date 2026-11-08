@@ -130,6 +130,9 @@ label.l{font-weight:800;display:block;margin:12px 0 6px}
 .modal > div{background:var(--card);border-radius:24px;padding:24px;max-width:520px;width:100%}
 .toast{position:fixed;left:50%;top:18px;transform:translateX(-50%);background:var(--ink);color:#fff;padding:12px 18px;border-radius:999px;font-weight:800;z-index:50}
 @media (max-width:600px){body{font-size:18px}.opts.grid2{grid-template-columns:1fr}}
+.teamgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:10px}
+.teamcard{background:#EEF0FB;border:2px solid #C9D0EE;border-radius:16px;padding:14px 16px;font-weight:800;font-size:21px}
+.teamcard.new{animation:pop .6s ease;background:#FFF3CC;border-color:var(--yellow)}
 </style>
 </head>
 <body>
@@ -308,9 +311,9 @@ function players(){
   SAY.length=0;
   const list=Object.keys(DB.students).sort();
   $(`<div class="top"><div class="brand"><div class="b">🔍</div>Detectives del Pensamiento</div>
-     <button class="btn ghost sm" onclick="askPin()">📊 Panel docente</button></div>
+     <button class="btn ghost sm" onclick="start()">← Inicio</button></div>
    <div class="panel">
-    <h1 style="font-size:34px">¿Quién va a jugar?</h1>
+    <h1 style="font-size:34px">Práctica en esta tablet: ¿quién va a jugar?</h1>
     <p class="muted">Toca tu código. Si juegan en pareja, toquen los dos (máximo 2).</p>
     ${list.length?`<div class="plist">${list.map(u=>`<button class="pbtn ${PLAYERS.includes(u)?'on':''}" onclick="togglePlayer('${esc(u)}')">${esc(u)}${DB.students[u].name?`<small>${esc(DB.students[u].name)}</small>`:""}</button>`).join("")}</div>`
       :`<p class="lead" style="margin:16px 0">Todavía no hay estudiantes en esta tablet. Agrega el primero abajo.</p>`}
@@ -526,19 +529,19 @@ function result(){
 }
 
 /* ===================== PANEL DOCENTE ===================== */
-function askPin(){
+function askPin(target){target=target||"curso";
   const m=modal(`<h2 style="font-size:28px">Panel docente</h2><p class="muted">Ingresa la clave${DB.pin==="1234"?" (inicial: 1234; cámbiala en «Datos»)":""}.</p>
    <input class="inp" id="pn" type="password" inputmode="numeric" maxlength="8" style="margin-top:10px">
    <div class="row" style="margin-top:16px"><button class="btn ghost" id="no">Cancelar</button><button class="btn y" id="ok">Entrar</button></div>`);
   m.querySelector("#no").onclick=()=>m.remove();
-  const go=()=>{if(m.querySelector("#pn").value===DB.pin){m.remove();teacher("curso");}else toast("Clave incorrecta");};
+  const go=()=>{if(m.querySelector("#pn").value===DB.pin){m.remove();teacher(target);}else toast("Clave incorrecta");};
   m.querySelector("#ok").onclick=go;m.querySelector("#pn").onkeydown=e=>{if(e.key==="Enter")go();};
   setTimeout(()=>m.querySelector("#pn").focus(),50);
 }
 const TABS=[["vivo","🔴 En vivo"],["curso","📊 Curso"],["escritos","✍️ Revisar escritos"],["errores","⚠️ Errores frecuentes"],["datos","💾 Datos"],["guia","📘 Guía"]];
 function teacher(tab,arg){
   const body={vivo:tVivo,curso:tCurso,escritos:tEscritos,errores:tErrores,datos:tDatos,guia:tGuia,est:tEst}[tab](arg);
-  $(`<div class="lhead"><button class="iconbtn" onclick="players()">←</button><h2 style="font-size:28px">Panel docente</h2></div>
+  $(`<div class="lhead"><button class="iconbtn" onclick="start()">←</button><h2 style="font-size:28px">Panel docente</h2></div>
    <div class="tabs">${TABS.map(([k,n])=>`<button class="${k===tab?'on':''}" onclick="teacher('${k}')">${n}</button>`).join("")}</div>${body}`);
   if(tab==="vivo")vivoMount();
 }
@@ -776,7 +779,7 @@ function tVivo(){
     <div style="text-align:center"><div id="qr" style="display:inline-block;background:#fff;padding:14px;border-radius:18px;border:2px solid var(--line)"></div>
       <p style="font-size:14px;word-break:break-all;margin-top:8px" class="muted">${esc(vivoLink())}</p>
       <button class="btn ghost sm" style="margin-top:6px" onclick="copyText(vivoLink(),'Link')">Copiar link</button></div>
-    <div><h3 style="font-size:24px;margin-bottom:8px">Equipos en la sala: <span id="vn">0</span></h3><div id="vteams" class="row" style="gap:8px"></div></div>
+    <div><h3 style="font-size:30px;margin-bottom:4px"><span id="vn" style="font-size:56px;color:var(--navy)">0</span> equipos en la sala</h3><p class="muted" style="margin-bottom:12px">Van apareciendo a medida que escanean el QR.</p><div id="vteams" class="teamgrid"></div></div>
    </div>
    <div id="vres" style="margin-top:20px"></div>
    <p class="muted" style="font-size:14px;margin-top:12px">Se actualiza solo cada 4 segundos. Todo queda guardado en tu Google Sheets (pestañas Salas, Equipos y Respuestas).</p></div>`;
@@ -811,6 +814,13 @@ function vivoMount(){
   vivoButtons(V.estado||"espera");
   every(4000,vivoRefresh);
 }
+let SEEN=new Set();
+function vivoTeams(names){
+  const box=document.getElementById("vteams");if(!box)return;
+  if(!names.length){box.innerHTML=`<p class="muted" style="font-size:20px">⏳ Esperando que escaneen el QR…</p>`;SEEN=new Set();return;}
+  box.innerHTML=names.map(n=>`<div class="teamcard${SEEN.has(n)?"":" new"}">🕵️ ${esc(n)}</div>`).join("");
+  names.forEach(n=>SEEN.add(n));
+}
 async function vivoRefresh(){
   const V=DB.live;let r;
   try{r=await api(V.id,{a:"resultados",sala:V.sala,clave:V.clave});}catch(e){const d=document.getElementById("vres");if(d)d.innerHTML=`<p class="muted">⚠️ Sin conexión con la hoja: ${esc(e.message)}</p>`;return;}
@@ -818,7 +828,7 @@ async function vivoRefresh(){
   if(r.estado!==V.estado){V.estado=r.estado;save();}vivoButtons(r.estado);
   const list=liveItems(r.mision||V.m),N=list.length;
   document.getElementById("vn").textContent=r.equipos.length;
-  document.getElementById("vteams").innerHTML=r.equipos.map(t=>`<span class="chip">🕵️ ${esc(t.nombre)}</span>`).join("")||`<p class="muted">Esperando que escaneen el QR…</p>`;
+  vivoTeams(r.equipos.map(t=>t.nombre));
   if(r.estado==="espera"){document.getElementById("vres").innerHTML="";return;}
   const tot=r.equipos.reduce((s,t)=>s+t.n,0),okT=r.equipos.reduce((s,t)=>s+t.ok,0),fin=r.equipos.filter(t=>t.n>=N).length;
   const eqs=[...r.equipos].sort((a,b)=>b.n-a.n||b.ok-a.ok);
@@ -838,7 +848,26 @@ async function vivoRefresh(){
 }
 
 /* ===================== INICIO ===================== */
-if(QS.get("sala")&&QS.get("api"))liveStart();else players();
+function start(){
+  SAY.length=0;
+  $(`<div class="top"><div class="brand"><div class="b">🔍</div>Detectives del Pensamiento</div></div>
+   <div class="hero"><div><h1>¿Qué quieres hacer?</h1><p>Elige una opción para empezar.</p></div><div style="font-size:70px">🕵️</div></div>
+   <div class="missions">
+    <button class="mcard" onclick="askPin('vivo')" style="border-color:#D63E4E;min-height:260px">
+      <div class="ic" style="background:#FCE9EB">🔴</div><h3>Soy profesor: sala en vivo</h3>
+      <p class="muted" style="font-size:17px">Crea una sala con QR. Los equipos escanean, aparecen solos en tu pantalla y tú das la partida. Ves los resultados en tiempo real.</p>
+      <span class="btn y sm" style="margin-top:auto">Crear sala ▸</span></button>
+    <button class="mcard" onclick="players()" style="min-height:260px">
+      <div class="ic" style="background:#EEF0FB">🎮</div><h3>Práctica en esta tablet</h3>
+      <p class="muted" style="font-size:17px">Para jugar las 6 misiones con niveles y etapas. Cada estudiante usa su código y el progreso queda en esta tablet.</p>
+      <span class="btn ghost sm" style="margin-top:auto">Practicar ▸</span></button>
+    <button class="mcard" onclick="askPin('curso')" style="min-height:260px">
+      <div class="ic" style="background:#E3F6EE">📊</div><h3>Panel docente</h3>
+      <p class="muted" style="font-size:17px">Resultados de la práctica, escritos por revisar, datos y guía.</p>
+      <span class="btn ghost sm" style="margin-top:auto">Entrar ▸</span></button>
+   </div>`);
+}
+if(QS.get("sala")&&QS.get("api"))liveStart();else start();
 
 </script>
 </body>
