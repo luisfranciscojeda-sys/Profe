@@ -1,0 +1,659 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Detectives del Pensamiento v2</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;800&family=Nunito:wght@500;700;800&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#F3F1FA;--card:#fff;--ink:#1B2240;--muted:#5E6584;--line:#E1DEEE;--navy:#22305E;--yellow:#FFC93C;
+ --good:#16996A;--goodbg:#E3F6EE;--bad:#D63E4E;--badbg:#FCE9EB;
+ --l1:#F4D5D9;--l2:#FFE7B3;--l3:#CDEBDD;--l4:#C9D4FF}
+*{box-sizing:border-box;margin:0;padding:0}
+html{-webkit-text-size-adjust:100%}
+body{font-family:'Nunito',system-ui,sans-serif;background:var(--bg);color:var(--ink);font-size:19px;line-height:1.5;-webkit-tap-highlight-color:transparent;min-height:100vh}
+h1,h2,h3{font-family:'Baloo 2',system-ui,sans-serif;line-height:1.15}
+button{font-family:inherit;cursor:pointer;border:none;color:inherit;font-size:inherit}
+input,textarea{font-family:inherit}
+.app{max-width:1040px;margin:0 auto;padding:22px 22px 48px;min-height:100vh;display:flex;flex-direction:column}
+.fade{animation:fade .3s ease}
+@keyframes fade{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:64px;padding:14px 24px;border-radius:18px;font-weight:800;font-size:20px;background:var(--navy);color:#fff;box-shadow:0 4px 0 #111a3a;transition:transform .08s}
+.btn:active{transform:translateY(3px);box-shadow:0 1px 0 #111a3a}
+.btn.y{background:var(--yellow);color:var(--ink);box-shadow:0 4px 0 #c99500}
+.btn.ghost{background:var(--card);color:var(--ink);border:2px solid var(--line);box-shadow:0 4px 0 var(--line)}
+.btn.sm{min-height:48px;padding:8px 16px;font-size:16px;border-radius:14px}
+.btn.full{width:100%}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.row{display:flex;gap:14px;flex-wrap:wrap}
+.row > .btn{flex:1}
+.top{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:20px;flex-wrap:wrap}
+.brand{display:flex;align-items:center;gap:10px;font-family:'Baloo 2';font-weight:800;font-size:25px;color:var(--navy)}
+.brand .b{width:48px;height:48px;border-radius:14px;background:var(--navy);display:grid;place-items:center;font-size:26px}
+.chip{background:var(--card);border:2px solid var(--line);border-radius:999px;padding:8px 14px;font-weight:800;display:inline-flex;gap:6px;align-items:center}
+.iconbtn{min-width:56px;min-height:56px;border-radius:16px;background:var(--card);border:2px solid var(--line);font-size:24px;display:grid;place-items:center;flex:none}
+.panel{background:var(--card);border-radius:28px;padding:26px;border:2px solid var(--line)}
+.kicker{font-weight:800;font-size:15px;text-transform:uppercase;letter-spacing:.08em;margin-bottom:6px}
+.muted{color:var(--muted)} .lead{font-size:21px}
+.hero{background:var(--navy);color:#fff;border-radius:28px;padding:24px 28px;margin-bottom:22px;display:flex;justify-content:space-between;gap:16px;align-items:center;flex-wrap:wrap}
+.hero h1{font-size:32px}.hero p{color:#C9D0EE}
+/* players */
+.plist{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:12px;margin:14px 0 18px}
+.pbtn{min-height:84px;border-radius:18px;border:3px solid var(--line);background:var(--card);font-weight:800;font-size:20px;padding:10px;display:flex;flex-direction:column;align-items:center;justify-content:center}
+.pbtn small{font-weight:600;color:var(--muted);font-size:14px}
+.pbtn.on{border-color:var(--navy);background:#EEF0FB}
+input.inp,textarea.inp{width:100%;min-height:60px;border-radius:16px;border:3px solid var(--line);padding:12px 16px;font-size:20px;font-weight:700;background:#fff}
+textarea.inp{min-height:110px;font-weight:600;resize:vertical}
+label.l{font-weight:800;display:block;margin:12px 0 6px}
+/* missions */
+.missions{display:grid;grid-template-columns:repeat(auto-fill,minmax(290px,1fr));gap:16px;margin-bottom:22px}
+.mcard{background:var(--card);border-radius:22px;padding:20px;text-align:left;border:2px solid var(--line);display:flex;flex-direction:column;gap:8px}
+.mcard .ic{width:58px;height:58px;border-radius:18px;display:grid;place-items:center;font-size:30px}
+.mcard h3{font-size:23px}
+.stages{display:flex;gap:6px;margin-top:4px}
+.stg{flex:1;text-align:center;border-radius:10px;padding:6px 4px;font-size:14px;font-weight:800;background:var(--bg);color:var(--muted)}
+.stg.done{background:var(--goodbg);color:var(--good)}
+.stg.open{background:#FFF3CC;color:#8A6400}
+.lvl{display:inline-block;padding:4px 10px;border-radius:99px;font-size:14px;font-weight:800}
+.lv0{background:var(--bg);color:var(--muted)}.lv1{background:var(--l1)}.lv2{background:var(--l2)}.lv3{background:var(--l3)}.lv4{background:var(--l4)}
+.stagebtn{width:100%;text-align:left;min-height:88px;border-radius:20px;border:3px solid var(--line);background:var(--card);padding:16px 18px;display:flex;align-items:center;gap:16px;margin-bottom:12px}
+.stagebtn .n{width:50px;height:50px;border-radius:50%;display:grid;place-items:center;font-weight:800;font-size:22px;background:var(--navy);color:#fff;flex:none}
+.stagebtn:disabled{opacity:.5}
+.stagebtn b{display:block;font-size:20px}
+/* lesson */
+.tool{border-radius:22px;padding:22px;margin:16px 0;color:#fff}
+.tool .q{font-family:'Baloo 2';font-size:27px;line-height:1.2;margin:4px 0 8px}
+.steps{display:flex;flex-direction:column;gap:12px;margin:16px 0}
+.step{background:var(--bg);border-radius:18px;padding:14px 18px;display:flex;gap:14px;align-items:flex-start}
+.step .n{flex:none;width:40px;height:40px;border-radius:50%;background:var(--navy);color:#fff;display:grid;place-items:center;font-weight:800}
+.quote{background:#FFF8E1;border-left:6px solid var(--yellow);border-radius:14px;padding:16px 18px;font-size:22px;font-weight:700;margin:14px 0}
+.lhead{display:flex;align-items:center;gap:14px;margin-bottom:18px}
+.prog{flex:1;height:16px;background:var(--line);border-radius:99px;overflow:hidden}
+.prog i{display:block;height:100%;background:var(--yellow);border-radius:99px;transition:width .4s}
+.challenge{display:grid;grid-template-columns:1fr;gap:18px}
+@media (min-width:820px){.challenge.two{grid-template-columns:1.05fr 1fr;align-items:start}}
+.stim{background:var(--card);border-radius:24px;padding:22px;border:2px solid var(--line)}
+.tag{display:inline-block;font-weight:800;font-size:15px;padding:5px 12px;border-radius:99px;background:var(--bg);margin-bottom:12px}
+.text{font-size:23px;font-weight:700;line-height:1.4}
+.post{border:2px solid var(--line);border-radius:18px;padding:16px;background:#FAFAFE}
+.post .who{display:flex;gap:10px;align-items:center;font-weight:800;margin-bottom:8px}
+.post .av{width:44px;height:44px;border-radius:50%;display:grid;place-items:center;font-size:22px;background:var(--line)}
+.q2{font-family:'Baloo 2';font-size:26px;margin-bottom:12px}
+.opts{display:flex;flex-direction:column;gap:12px}
+.opts.grid2{display:grid;grid-template-columns:1fr 1fr}
+.opt{min-height:72px;background:var(--card);border:3px solid var(--line);border-radius:18px;padding:14px 18px;text-align:left;font-weight:700;font-size:20px;display:flex;align-items:center;gap:12px}
+.opt .e{font-size:28px}
+.opt.center{justify-content:center;text-align:center;font-size:23px}
+.opt.sel{border-color:var(--navy);background:#EEF0FB}
+.opt.good{border-color:var(--good);background:var(--goodbg)}
+.opt.bad{border-color:var(--bad);background:var(--badbg)}
+.opt:disabled{cursor:default}
+.sent{display:block;width:100%;text-align:left;min-height:64px;padding:14px 16px;border-radius:16px;border:3px dashed var(--line);background:var(--card);font-size:20px;font-weight:600;margin-bottom:10px}
+.sent.good{border-style:solid;border-color:var(--good);background:var(--goodbg)}
+.sent.bad{border-style:solid;border-color:var(--bad);background:var(--badbg)}
+.hintbox{background:#FFF8E1;border-radius:16px;padding:14px 16px;margin-top:12px;font-weight:600}
+.fb{border-radius:20px;padding:18px 20px;margin-top:14px}
+.fb.good{background:var(--goodbg)}.fb.bad{background:var(--badbg)}.fb.info{background:#EEF0FB}
+.fb h3{font-size:23px;margin-bottom:4px}
+.fb.good h3{color:var(--good)}.fb.bad h3{color:var(--bad)}.fb.info h3{color:var(--navy)}
+.fb .tip{margin-top:8px;font-weight:700}
+.invest{border-radius:16px;padding:14px 16px;background:#E8F4FF;margin-top:12px;font-weight:600}
+.talk{background:#FFF1D6;border-radius:18px;padding:16px 18px;margin-top:14px;display:flex;gap:12px;align-items:flex-start;font-weight:700}
+.talk .e{font-size:30px}
+.lab-tricks{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:10px;margin:14px 0}
+.result{text-align:center}
+.result .medal{font-size:100px;line-height:1;margin:6px 0 8px;animation:pop .5s ease}
+@keyframes pop{0%{transform:scale(.4);opacity:0}70%{transform:scale(1.1)}100%{transform:scale(1);opacity:1}}
+/* teacher */
+.tabs{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px}
+.tabs button{min-height:52px;padding:8px 16px;border-radius:14px;border:2px solid var(--line);background:var(--card);font-weight:800;font-size:17px}
+.tabs button.on{background:var(--navy);color:#fff;border-color:var(--navy)}
+.tbl{width:100%;border-collapse:separate;border-spacing:0;font-size:16px;background:#fff;border-radius:16px;overflow:hidden;border:2px solid var(--line)}
+.tbl th,.tbl td{padding:10px 10px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top}
+.tbl th{background:#F7F6FC;font-size:14px;text-transform:uppercase;letter-spacing:.04em;color:var(--muted)}
+.tbl tr:last-child td{border-bottom:none}
+.tbl td.c{text-align:center}
+.scroll{overflow-x:auto}
+.legend{display:flex;gap:8px;flex-wrap:wrap;margin:10px 0 14px}
+.card2{background:#fff;border:2px solid var(--line);border-radius:18px;padding:16px;margin-bottom:12px}
+.bar{height:12px;background:var(--line);border-radius:99px;overflow:hidden;margin-top:6px}
+.bar i{display:block;height:100%;background:var(--bad)}
+.ev{background:var(--bg);border-radius:16px;padding:14px 16px;margin-bottom:10px;font-size:17px}
+.ev b{display:block}
+.guide h3{font-size:22px;margin:18px 0 8px}.guide ul{padding-left:24px}.guide li{margin-bottom:6px}
+.confetti{position:fixed;inset:0;pointer-events:none;z-index:30;overflow:hidden}
+.confetti i{position:absolute;top:-14px;width:12px;height:16px;border-radius:3px;animation:fall 1.8s ease-in forwards}
+@keyframes fall{to{transform:translateY(105vh) rotate(600deg)}}
+.modal{position:fixed;inset:0;background:rgba(27,34,64,.55);display:grid;place-items:center;padding:20px;z-index:40}
+.modal > div{background:var(--card);border-radius:24px;padding:24px;max-width:520px;width:100%}
+.toast{position:fixed;left:50%;top:18px;transform:translateX(-50%);background:var(--ink);color:#fff;padding:12px 18px;border-radius:999px;font-weight:800;z-index:50}
+@media (max-width:600px){body{font-size:18px}.opts.grid2{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div class="app" id="app"></div>
+<script>
+/* ===================== CONTENIDO ===================== */
+const TRICKS=[
+ {e:"😱",n:"Emoción exagerada",d:"Usa mayúsculas, alarma o rabia para que compartas sin pensar."},
+ {e:"🎭",n:"Falso experto o imitación",d:"Alguien se hace pasar por experto, o por una institución o persona confiable."},
+ {e:"🤷",n:"Sin fuente",d:"«Dicen que…», «todo el mundo sabe…», pero nunca dice quién ni cómo lo sabe."},
+ {e:"🪤",n:"Titular trampa",d:"El título promete algo que la noticia en realidad no dice."}];
+const FALL=[
+ {e:"🔍",n:"Conclusión apurada",d:"Saca una regla para todos a partir de uno o pocos casos."},
+ {e:"👉",n:"Atacar a la persona",d:"Critica a quien habla en vez de responder a su idea."},
+ {e:"🐑",n:"«Todos lo hacen»",d:"Algo sería correcto solo porque mucha gente lo hace."},
+ {e:"⚖️",n:"Solo dos caminos",d:"Presenta dos opciones como si no existieran otras."}];
+const LEVELS=["Sin datos","Inicial","En desarrollo","Logrado","Avanzado"];
+
+const MISSIONS=[
+{id:"m1",n:"Hecho u opinión",e:"🧩",c:"#5B4BDB",type:"choice",
+ story:"Al tablero del curso llegaron mensajes mezclados. Algunos se pueden comprobar y otros son gustos o creencias.",
+ tool:{name:"La pregunta del comprobador",q:"¿Se puede comprobar con datos, un mapa, una medición o un documento?",
+  ex:"Si se puede comprobar, es un HECHO (aunque a veces resulte falso). Si depende de gustos o creencias, es una OPINIÓN. Palabras pista de opinión: mejor, peor, lindo, aburrido, creo, debería, injusto."},
+ worked:{text:"«Chile continental mide más de 4.000 km de largo.»",steps:["Me hago la pregunta del comprobador: ¿se puede comprobar?","Sí: puedo medirlo en un mapa o buscarlo en un atlas.","No tiene palabras como «mejor» o «lindo».","Conclusión: es un HECHO."]},
+ q:"¿Es un hecho o una opinión?",opts:[{e:"📏",n:"Hecho"},{e:"💭",n:"Opinión"}],
+ stages:[
+  {items:[
+   {s:"Santiago es la capital de Chile.",a:0,h:"¿Podrías comprobarlo en un atlas?",x:"Se puede comprobar en un mapa o en la Constitución: es un hecho."},
+   {s:"El completo es la comida más rica del mundo.",a:1,h:"Fíjate en «más rica». ¿Eso se mide?",x:"«Más rica» depende del gusto de cada persona: es una opinión."},
+   {s:"Las Fiestas Patrias se celebran el 18 de septiembre.",a:0,h:"¿Se puede revisar en un calendario?",x:"Está en el calendario oficial: es un hecho."},
+   {s:"Matemáticas es la asignatura más aburrida.",a:1,h:"¿A todos les aburre lo mismo?",x:"«Aburrida» es un juicio personal; a otros les encanta. Es una opinión."},
+   {s:"Los perros son mejores mascotas que los gatos.",a:1,h:"Busca la palabra pista.",x:"«Mejores» depende de lo que cada persona valora: es una opinión."}]},
+  {items:[
+   {s:"Según una encuesta, 21 de 30 estudiantes prefieren el recreo largo.",a:0,h:"La frase cuenta lo que dijo la encuesta. ¿Eso se puede revisar?",x:"«Preferir» suena a gusto, pero la frase informa un resultado que se puede revisar contando las respuestas. Es un hecho."},
+   {s:"Una historiadora dice que la Independencia fue el hecho más importante de la historia de Chile.",a:1,h:"Que lo diga una experta, ¿hace que «el más importante» se pueda medir?",x:"Aunque lo diga una experta, «el más importante» es un juicio. Es una opinión (bien informada, pero opinión)."},
+   {s:"En 1949 se aprobó en Chile el voto pleno de las mujeres.",a:0,h:"¿Hay leyes y documentos que lo registren?",x:"Está registrado en la ley y en documentos históricos: es un hecho."},
+   {s:"Es injusto que el recreo dure solo 15 minutos.",a:1,h:"Lo que dura el recreo se mide, pero «injusto»…",x:"La duración se puede medir, pero «injusto» es una valoración. La frase es una opinión."},
+   {s:"En el sur de Chile llueve más que en el norte.",a:0,h:"¿Existen mediciones de lluvia?",x:"Las estaciones meteorológicas miden la lluvia: es un hecho comprobable."}]},
+  {write:{q:"Piensa en un tema que estés estudiando en Historia o Formación Ciudadana.",fields:["Escribe un HECHO sobre ese tema","Escribe una OPINIÓN sobre ese mismo tema","¿Cómo sabes cuál es cuál?"]}}],
+ close:{q:"¿Qué pregunta te ayudó en esta misión?",o:["¿Me gusta o no me gusta?","¿Se puede comprobar con datos, un mapa o un documento?","¿Lo dijo alguien famoso?"],a:1},
+ talk:"Piensen en una opinión que tengan. ¿Qué hechos podrían usar para defenderla?"},
+
+{id:"m2",n:"¿Qué lo demuestra?",e:"🔎",c:"#1A8C78",type:"evidence",
+ story:"Cuando alguien afirma algo, un buen detective busca la prueba. No basta con que suene bien.",
+ tool:{name:"Busca la prueba",q:"¿Qué oración muestra que la afirmación es verdad?",ex:"Una buena prueba trae datos, observaciones o ejemplos concretos. Una opinión, o un dato sin relación con la afirmación, no sirven como prueba."},
+ worked:{text:"Afirmación: «Este año el curso leyó más libros.»",steps:["Leo cada oración y me pregunto: ¿esto lo demuestra?","«La biblioteca es muy bonita» → opinión, no prueba nada.","«El año pasado leímos 40 libros y este año 75» → ¡datos de antes y después!","Esa es la prueba."]},
+ stages:[
+  {items:[
+   {claim:"El huerto escolar ayudó a que el curso comiera más verduras.",s:["El huerto se construyó en marzo, al lado del gimnasio.","Antes del huerto, 8 de 30 estudiantes comían ensalada; en junio eran 19.","La profesora dice que el huerto quedó precioso.","Las lechugas crecieron muy rápido."],a:1,h:"Busca la oración que compare el antes y el después.",x:"La segunda oración da datos de antes y después. Las otras describen el huerto o dan opiniones."},
+   {claim:"Los delfines son animales inteligentes.",s:["Los delfines viven en casi todos los océanos.","Son muy simpáticos y a todo el mundo le gustan.","En experimentos, algunos delfines se reconocen en un espejo, algo que muy pocos animales logran.","Pueden nadar muy rápido."],a:2,h:"¿Cuál habla de lo que el delfín puede entender?",x:"Reconocerse en un espejo es una observación de un experimento sobre su mente. Ser simpático o rápido no demuestra inteligencia."}]},
+  {items:[
+   {claim:"El letrero de «No correr» redujo los accidentes en el pasillo.",s:["El letrero es rojo y muy grande.","El inspector cree que el letrero funciona.","En abril hubo 12 accidentes; en mayo, con el letrero, hubo 4.","A muchos estudiantes les gusta el letrero."],a:2,h:"Las creencias no son pruebas. Busca números.",x:"Los datos de abril y mayo son la prueba. Que el inspector «crea» que funciona es una opinión."},
+   {kind:"choice",s:"En mayo hubo menos accidentes. ¿Eso prueba que fue SOLO gracias al letrero?",o:["Sí, 100% seguro.","Es una buena pista, pero pudo haber otras causas (por ejemplo, menos días de clases en mayo)."],a:1,h:"¿Pudo cambiar algo más entre abril y mayo?",x:"Los datos apoyan la idea, pero otras cosas también pudieron cambiar. Un buen pensador busca otras explicaciones posibles."},
+   {claim:"Desayunar ayuda a rendir mejor en las pruebas.",s:["Mi abuela dice que el desayuno es la comida más importante del día.","Un estudio con 500 estudiantes encontró que quienes desayunaban obtuvieron, en promedio, mejores resultados.","La leche tiene calcio.","A muchos niños les gusta el pan con palta."],a:1,h:"¿Cuál trae datos sobre pruebas y desayuno?",x:"El estudio compara a muchos estudiantes. Lo que dice la abuela es una opinión, y lo del calcio no habla de pruebas."}]},
+  {write:{q:"Alguien dice: «Los perros son más inteligentes que los gatos».",fields:["¿Qué prueba le pedirías para creerle?","¿Por qué esa prueba sí serviría?"]}}],
+ close:{q:"¿Qué hace que algo sea una buena prueba?",o:["Que suene convincente","Que tenga datos, observaciones o ejemplos concretos","Que lo diga una persona simpática"],a:1},
+ talk:"¿Qué prueba le pedirían a alguien que dice «los videojuegos hacen mal»?"},
+
+{id:"m3",n:"¿Quién está detrás?",e:"🕵️",c:"#2F6FE4",type:"source",
+ story:"Los verificadores profesionales SALEN de la página para averiguar quién está detrás antes de creer. Esto se llama lectura lateral.",
+ tool:{name:"Investiga antes de creer",q:"¿Quién publica esto y qué dicen otros sobre esa fuente?",ex:"No te quedes con lo que la página dice de sí misma. Revisa qué dicen otras fuentes, si busca venderte algo y si otros medios confiables publican lo mismo."},
+ worked:{text:"Un sitio muy bonito dice: «Esta pulsera mágica cura el resfrío».",steps:["En vez de leer todo el sitio, abro otra pestaña y busco quién lo publica.","Descubro que el mismo sitio vende la pulsera.","Ningún médico ni institución de salud dice que funcione.","Conclusión: DUDO de esta información."]},
+ stages:[
+  {items:[
+   {who:"SaludNatural-Hoy.com",av:"🍫",says:"¡Comer chocolate todos los días te convierte en un genio!",inv:"Este sitio vende chocolates «para la inteligencia». No dice quién escribe y ninguna institución científica dice lo mismo.",a:1,x:"Quiere venderte algo y nadie confiable lo respalda. ¡Hay que dudar!"},
+   {who:"Dirección Meteorológica de Chile",av:"🌦️",says:"Mañana se esperan lluvias en Concepción.",inv:"Es el organismo del Estado que estudia el tiempo y el clima. Usa estaciones de medición en todo el país.",a:0,x:"Es una fuente experta y usa mediciones. Es confiable (aunque los pronósticos a veces fallan)."}]},
+  {items:[
+   {who:"NoticiasUrgentes_CL",av:"📺",says:"ÚLTIMO MINUTO: se suspenden las clases en todo Chile mañana.",inv:"La cuenta se creó hace 3 días y usa un logo parecido al de un canal de TV. El canal real dice que no es suya. Ningún otro medio ni el Ministerio de Educación publican esa noticia.",a:1,x:"Imita a un canal real y nadie más publica la noticia. Revisa las fuentes oficiales."},
+   {who:"Blog «Ciencia para Todos»",av:"🐝",says:"Las abejas se avisan dónde hay flores bailando.",inv:"La autora es profesora de biología. El artículo enlaza a estudios científicos, y las enciclopedias dicen lo mismo.",a:0,x:"¡Ojo! Que sea un blog no lo hace falso: la autora sabe del tema, cita estudios y otras fuentes confirman. Es confiable."},
+   {who:"Instituto Mundial de Salud Infantil",av:"🏥",says:"Las pantallas no hacen ningún daño: úsalas todo el día.",inv:"El «instituto» es una página creada por una empresa que vende videojuegos. Los organismos de salud recomiendan limitar el tiempo frente a pantallas.",a:1,x:"El nombre suena oficial, pero detrás hay una empresa que gana si juegas más. Hay que dudar."},
+   {who:"Museo Nacional de Historia Natural",av:"🦕",says:"El desierto de Atacama tiene suelos parecidos a los de Marte.",inv:"Es un museo público con investigadores. Otras instituciones, como la NASA, también han estudiado Atacama por eso.",a:0,x:"Es una institución científica y otras fuentes confirman lo mismo. Es confiable."}]},
+  {write:{q:"Te llega por WhatsApp: «Mañana el agua de la llave estará contaminada. No la tomen y reenvíen a todos».",fields:["¿Qué harías primero para investigar?","¿Qué otra cosa revisarías antes de reenviarlo?"]}}],
+ close:{q:"¿Qué hace un buen detective antes de creer en una página?",o:["Lee todo con atención sin salir de la página","Sale a investigar quién está detrás y qué dicen otras fuentes","Mira si la página es bonita"],a:1},
+ talk:"¿Les ha llegado un mensaje que resultó falso? ¿Cómo podrían haberlo investigado?"},
+
+{id:"m4",n:"Trucos de la desinformación",e:"🎪",c:"#D6427A",type:"choice",lab:true,
+ story:"Quienes inventan noticias falsas usan siempre los mismos trucos. Si los conoces antes, ¡es como una vacuna contra los engaños!",
+ tool:{name:"Detecta el truco",q:"¿Qué truco está usando este mensaje para convencerme?",ex:"Cuatro trucos muy comunes: emoción exagerada, falso experto o imitación, sin fuente y titular trampa."},
+ q:"¿Qué truco usa este mensaje?",opts:TRICKS,
+ stages:[
+  {items:[
+   {s:"¡¡ALERTA!! 😱 Los celulares EXPLOTAN si los cargas de noche. ¡¡COMPARTE ANTES DE QUE LO BORREN!!",a:0,h:"Mira las mayúsculas y los signos de exclamación.",x:"Usa alarma y apuro para que compartas sin pensar."},
+   {s:"El «Doctor» Max (que en realidad no es médico) asegura: este jugo cura todas las enfermedades.",a:1,h:"¿Es de verdad experto quien habla?",x:"Se presenta como doctor sin serlo: falso experto."},
+   {s:"Dicen que van a cerrar todas las plazas del país. Todo el mundo lo sabe.",a:2,h:"¿Quién lo dice? ¿Cómo lo sabe?",x:"«Dicen que…» y «todo el mundo sabe» no indican quién lo afirma. No tiene fuente."}]},
+  {items:[
+   {s:"Título: «¡Perro aprende a hablar!» — Noticia: el perro aprendió a apretar botones con sonidos para pedir comida.",a:3,h:"Compara el título con lo que realmente pasó.",x:"Apretar botones no es hablar. El título exagera para que hagas clic."},
+   {s:"La cuenta «Ministerio de Educasión» anuncia dos semanas extra de vacaciones.",a:1,h:"Fíjate en cómo está escrito el nombre.",x:"«Educasión» con S: imita a una institución real para parecer confiable."},
+   {s:"¡Esto te va a INDIGNAR! Lo que hicieron en el colegio vecino es TERRIBLE.",a:0,h:"¿Qué quiere hacerte sentir antes de contarte algo?",x:"Busca que sientas rabia antes de darte información."},
+   {s:"Título: «¡Científicos confirman que el chocolate adelgaza!» — Noticia: un estudio con 10 personas encontró una pequeña diferencia que aún debe confirmarse.",a:3,h:"¿La noticia dice «confirman»?",x:"La noticia habla de un estudio pequeño y sin confirmar. El título dice mucho más de lo que hay."}]},
+  {write:{q:"Este mensaje está lleno de trucos: «¡¡URGENTE!! Dicen que van a quitar los recreos. ¡¡Compártelo YA!!»",fields:["Reescríbelo de forma honesta","¿Qué trucos le sacaste?"]}}],
+ close:{q:"¿Por qué sirve conocer los trucos antes de ver una noticia falsa?",o:["Para aprender a inventar noticias falsas","Para reconocer el engaño más rápido, como una vacuna","No sirve de nada"],a:1},
+ talk:"¿Qué truco creen que se usa más en las redes sociales? ¿Por qué funcionará?"},
+
+{id:"m5",n:"Trampas del razonamiento",e:"🪤",c:"#C9612B",type:"choice",
+ story:"A veces una idea suena lógica, pero tiene una trampa escondida. Los detectives las desarman.",
+ tool:{name:"Revisa el puente",q:"¿Las razones de verdad llevan a la conclusión, o hay una trampa en el camino?",ex:"Cuatro trampas comunes: conclusión apurada, atacar a la persona, «todos lo hacen» y solo dos caminos."},
+ worked:{text:"«Mi primo comió pescado y le dolió la guata. El pescado hace mal.»",steps:["Razón: a UNA persona le dolió la guata.","Conclusión: el pescado le hace mal a TODOS.","El puente es débil: un caso no basta para hablar de todos.","Es una conclusión apurada."]},
+ q:"¿Qué trampa tiene este razonamiento?",opts:FALL,
+ stages:[
+  {items:[
+   {s:"Un perro me ladró en la calle. Todos los perros son malos.",a:0,h:"¿Cuántos perros conoció esta persona?",x:"A partir de un solo perro saca una conclusión sobre todos."},
+   {s:"Copiar en la prueba está bien, porque todos lo hacen.",a:2,h:"¿Que mucha gente lo haga lo vuelve correcto?",x:"Que mucha gente haga algo no lo vuelve correcto."},
+   {s:"O vienes a mi cumpleaños, o no eres mi amigo.",a:3,h:"¿Existen otras posibilidades?",x:"Se puede ser amigo y no poder ir. Presenta solo dos caminos cuando hay más."}]},
+  {items:[
+   {s:"No le creas a Sofía sobre el reciclaje: ni siquiera es buena en Educación Física.",a:1,h:"¿Se responde a la idea de Sofía o se habla de ella?",x:"Los deportes no tienen nada que ver con el reciclaje. Ataca a la persona."},
+   {s:"Si no votas por mí para presidente de curso, es porque quieres que el curso sea un desastre.",a:3,h:"¿Votar por otra persona significa querer un desastre?",x:"Se puede preferir a otro candidato y querer lo mejor para el curso."},
+   {s:"Ese científico dice que el clima está cambiando, pero se viste horrible, así que no le creo.",a:1,h:"¿La ropa tiene algo que ver con el clima?",x:"Su ropa no tiene relación con sus datos. Ataca a la persona en vez de revisar sus pruebas."},
+   {s:"Saqué un libro de la biblioteca y era aburrido. Todos los libros de la biblioteca son aburridos.",a:0,h:"¿Cuántos libros leyó?",x:"Un solo libro no basta para hablar de todos: conclusión apurada."}]},
+  {write:{q:"Piensa en una trampa del razonamiento que hayas escuchado (sin usar nombres reales).",fields:["Escribe el ejemplo","¿Qué trampa es?","¿Cómo le responderías?"]}}],
+ close:{q:"¿Qué revisas cuando buscas una trampa del razonamiento?",o:["Si la persona me cae bien","Si las razones realmente llevan a la conclusión","Si la frase es corta"],a:1},
+ talk:"Inventen un ejemplo de «todos lo hacen» que hayan escuchado. ¿Cómo le responderían?"},
+
+{id:"m6",n:"Dilemas: piensa y argumenta",e:"💬",c:"#7B3FA0",type:"dilemma",
+ story:"Aquí no hay una respuesta correcta única. Puedes elegir cualquier postura: lo que importa es la CALIDAD de tus razones y entender al otro lado.",
+ tool:{name:"Razón con porqué",q:"¿Mi razón explica por qué y piensa en las personas afectadas?",ex:"Una razón fuerte explica el porqué y considera a los demás. Una débil es solo «porque sí». Una tramposa usa alguna trampa del razonamiento."},
+ worked:{text:"Dilema: ¿El curso debería tener mascota?",steps:["Postura: sí.","Razón débil: «porque es lindo».","Razón fuerte: «nos enseña a ser responsables, si nos organizamos con turnos para cuidarla».","La razón fuerte explica el porqué y piensa en el animal y en el curso."]},
+ stages:[
+  {items:[
+   {q:"¿Se debería permitir el celular en los recreos?",sides:[{n:"Sí, permitirlo",e:"📱",r:[{t:"Ayuda a comunicarse con la familia y a aprender a usarlo con responsabilidad, si hay reglas claras.",k:"f"},{t:"Porque es entretenido y ya.",k:"d"},{t:"Porque todos los colegios lo permiten.",k:"t",why:"Es la trampa de «todos lo hacen» (y además no es cierto)."}]},{n:"No permitirlo",e:"🚫",r:[{t:"Sin celular jugamos y conversamos más, y hay menos conflictos por redes sociales.",k:"f"},{t:"Porque no.",k:"d"},{t:"Porque quienes usan celular son flojos.",k:"t",why:"Es una conclusión apurada y ataca a las personas."}]}]},
+   {q:"El curso juntó dinero. ¿Lo usan para un paseo o lo donan a una escuela que se inundó?",sides:[{n:"Hacer el paseo",e:"🚌",r:[{t:"Fue una meta que el curso acordó y por la que trabajó; cumplirla respeta ese acuerdo.",k:"f"},{t:"Porque queremos ir.",k:"d"},{t:"Porque la otra escuela seguro no lo necesita tanto.",k:"t",why:"Afirma algo sin ninguna prueba."}]},{n:"Donarlo",e:"🤝",r:[{t:"Otros niños perdieron sus materiales; ayudarlos puede ser más urgente que un paseo.",k:"f"},{t:"Porque sí, es lo mejor.",k:"d"},{t:"Porque si no donamos, todos van a pensar que somos malos.",k:"t",why:"Usa la presión del grupo en vez de una razón."}]}]}]},
+  {items:[
+   {other:true,q:"En el equipo del curso, ¿deben jugar siempre los mejores o todos por turnos?",sides:[{n:"Los mejores",e:"🏆",r:[{t:"En un campeonato, el equipo quiere dar su máximo, y cualquiera puede ganarse el puesto entrenando.",k:"f"},{t:"Porque me gusta ganar.",k:"d"},{t:"Porque los que juegan mal nunca van a mejorar.",k:"t",why:"Conclusión apurada: con práctica, la gente sí mejora."}]},{n:"Todos por turnos",e:"🔄",r:[{t:"Todos tienen derecho a participar, y jugar es la mejor forma de aprender y mejorar.",k:"f"},{t:"Porque es más bonito.",k:"d"},{t:"Porque los buenos son unos creídos.",k:"t",why:"Ataca a las personas en vez de dar una razón."}]}]},
+   {other:true,q:"¿Debería ser obligatorio el uniforme en el colegio?",sides:[{n:"Sí, obligatorio",e:"👕",r:[{t:"Evita que se marquen diferencias por la ropa de marca y ayuda a que nadie se sienta menos.",k:"f"},{t:"Porque se ve ordenado y ya.",k:"d"},{t:"Porque quienes no quieren uniforme son desordenados.",k:"t",why:"Ataca a las personas y generaliza."}]},{n:"No obligatorio",e:"🎨",r:[{t:"Permite expresar la propia personalidad, y algunas familias gastan menos usando ropa que ya tienen.",k:"f"},{t:"Porque el uniforme es feo.",k:"d"},{t:"Porque en otros países nadie usa uniforme.",k:"t",why:"Es «todos lo hacen» y además no es cierto."}]}]}]},
+  {write:{q:"Dilema: ¿Se deberían dar tareas para la casa los fines de semana?",fields:["Tu postura","Tu razón más fuerte (explica el porqué)","La mejor razón del otro lado"]}}],
+ close:{q:"En un dilema, ¿qué hace fuerte a tu argumento?",o:["Elegir lo que eligió la mayoría","Dar razones que explican por qué y consideran a los demás","Hablar más fuerte"],a:1},
+ talk:"Una persona defiende un lado y la otra el contrario, solo con razones fuertes. ¡Después cambien de lado!"}
+];
+const STAGE_NAMES=["Etapa 1 · Práctica","Etapa 2 · Casos con trampa","Etapa 3 · Escribe tu respuesta"];
+
+/* ===================== ESTADO Y EVIDENCIA ===================== */
+const KEY="detectives_v2";
+let DB={dev:"T"+Math.random().toString(36).slice(2,6).toUpperCase(),seq:0,pin:"1234",students:{},log:[],valid:{}};
+try{const r=localStorage.getItem(KEY);if(r)DB=Object.assign(DB,JSON.parse(r));}catch(e){}
+function save(){try{localStorage.setItem(KEY,JSON.stringify(DB));}catch(e){toast("No se pudo guardar en esta tablet");}}
+let PLAYERS=[];
+/* Evento: id, u=código, m=misión, s=etapa(0-2), a=intento, k=ítem, ok, h=pista, inv=investigó, t=segundos, x=texto, ts */
+function logEv(ev){PLAYERS.forEach(u=>{DB.log.push(Object.assign({id:DB.dev+"-"+(++DB.seq),u,ts:Date.now()},ev));});save();}
+
+function attempts(u,m,s){
+  const map={};
+  DB.log.forEach(e=>{if(e.u===u&&e.m===m&&e.s===s){(map[e.a]=map[e.a]||{n:0,ok:0,h:0,ts:e.ts,done:false,x:null});const A=map[e.a];
+    if(e.k==="end")A.done=true;else if(e.k==="txt"){A.x=e.x;A.done=true;}else{A.n++;A.ok+=e.ok?1:0;A.h+=e.h?1:0;}}});
+  return Object.entries(map).map(([a,v])=>Object.assign({a},v,{p:v.n?v.ok/v.n:0}));
+}
+function bestPct(u,m,s,maxH){const at=attempts(u,m,s).filter(x=>x.done&&x.n>0&&(maxH===undefined||x.h<=maxH));return at.length?Math.max(...at.map(x=>x.p)):null;}
+function hasText(u,m){return attempts(u,m,2).some(x=>x.x);}
+function level(u,m){
+  if(DB.valid[u+"|"+m]===true) return 4;
+  if((bestPct(u,m,1,1)??0)>=.7) return 3;
+  if((bestPct(u,m,0)??0)>=.7) return 2;
+  if(DB.log.some(e=>e.u===u&&e.m===m)) return 1;
+  return 0;
+}
+function unlocked(u,m,s){ if(s===0)return true; if(s===1)return (bestPct(u,m,0)??0)>=.7; return (bestPct(u,m,1)??0)>=.7; }
+const anyUnlocked=(m,s)=>PLAYERS.some(u=>unlocked(u,m,s));
+const stageDone=(m,s)=>PLAYERS.length&&PLAYERS.every(u=>s<2?(bestPct(u,m,s)??0)>=.7:hasText(u,m));
+
+/* ===================== UTILIDADES ===================== */
+const app=document.getElementById("app");
+const $=h=>{app.innerHTML=`<div class="fade">${h}</div>`;window.scrollTo(0,0);};
+const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const canSpeak=("speechSynthesis" in window);
+function speak(t){try{speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(t);u.lang="es-CL";u.rate=.95;speechSynthesis.speak(u);}catch(e){}}
+const SAY=[];function sayBtn(t){if(!canSpeak)return"";SAY.push(t);return `<button class="iconbtn" aria-label="Escuchar" onclick="speak(SAY[${SAY.length-1}])">🔊</button>`;}
+const lvlChip=l=>`<span class="lvl lv${l}">${l?l+" · ":""}${LEVELS[l]}</span>`;
+function toast(t){const d=document.createElement("div");d.className="toast";d.textContent=t;document.body.appendChild(d);setTimeout(()=>d.remove(),2400);}
+function confetti(n){const box=document.createElement("div");box.className="confetti";const cols=["#FFC93C","#5B4BDB","#16996A","#2F6FE4","#D6427A","#C9612B"];
+ for(let i=0;i<n;i++){const p=document.createElement("i");p.style.left=Math.random()*100+"%";p.style.background=cols[i%6];p.style.animationDelay=Math.random()*.4+"s";p.style.animationDuration=(1.3+Math.random())+"s";box.appendChild(p);}
+ document.body.appendChild(box);setTimeout(()=>box.remove(),2800);}
+function modal(html){const m=document.createElement("div");m.className="modal";m.innerHTML=`<div>${html}</div>`;document.body.appendChild(m);return m;}
+const pname=u=>DB.students[u]?(DB.students[u].name?`${esc(DB.students[u].name)} (${esc(u)})`:esc(u)):esc(u);
+
+/* ===================== JUGADORES ===================== */
+function players(){
+  SAY.length=0;
+  const list=Object.keys(DB.students).sort();
+  $(`<div class="top"><div class="brand"><div class="b">🔍</div>Detectives del Pensamiento</div>
+     <button class="btn ghost sm" onclick="askPin()">📊 Panel docente</button></div>
+   <div class="panel">
+    <h1 style="font-size:34px">¿Quién va a jugar?</h1>
+    <p class="muted">Toca tu código. Si juegan en pareja, toquen los dos (máximo 2).</p>
+    ${list.length?`<div class="plist">${list.map(u=>`<button class="pbtn ${PLAYERS.includes(u)?'on':''}" onclick="togglePlayer('${esc(u)}')">${esc(u)}${DB.students[u].name?`<small>${esc(DB.students[u].name)}</small>`:""}</button>`).join("")}</div>`
+      :`<p class="lead" style="margin:16px 0">Todavía no hay estudiantes en esta tablet. Agrega el primero abajo.</p>`}
+    <div class="row" style="margin-bottom:8px"><button class="btn y" ${PLAYERS.length?"":"disabled"} onclick="home()">${PLAYERS.length===2?"👥 Jugar en pareja ▸":"Jugar ▸"}</button>
+      <button class="btn ghost" onclick="addStudent()">➕ Agregar estudiante</button></div>
+   </div>`);
+}
+function togglePlayer(u){const i=PLAYERS.indexOf(u);if(i>=0)PLAYERS.splice(i,1);else{if(PLAYERS.length>=2)PLAYERS.shift();PLAYERS.push(u);}players();}
+function addStudent(){
+  const m=modal(`<h2 style="font-size:28px">Agregar estudiante</h2>
+   <label class="l">Código (ej: 5B-07)</label><input class="inp" id="cd" maxlength="12" autocomplete="off">
+   <label class="l">Nombre de pila (opcional)</label><input class="inp" id="nm" maxlength="20" autocomplete="off">
+   <p class="muted" style="font-size:15px;margin-top:8px">Sugerencia: usa solo el código o el nombre de pila, no el nombre completo.</p>
+   <div class="row" style="margin-top:16px"><button class="btn ghost" id="no">Cancelar</button><button class="btn y" id="ok">Agregar</button></div>`);
+  m.querySelector("#no").onclick=()=>m.remove();
+  m.querySelector("#ok").onclick=()=>{const c=m.querySelector("#cd").value.trim().toUpperCase().replace(/[^A-Z0-9ÑÁÉÍÓÚ_-]/g,"");
+    if(!c){toast("Escribe un código");return;} if(DB.students[c]){toast("Ese código ya existe");return;}
+    DB.students[c]={name:m.querySelector("#nm").value.trim()};save();m.remove();if(PLAYERS.length<2)PLAYERS.push(c);players();};
+}
+
+/* ===================== MAPA DE MISIONES ===================== */
+function home(){
+  SAY.length=0;
+  if(!PLAYERS.length)return players();
+  $(`<div class="top"><div class="brand"><div class="b">🔍</div>Detectives del Pensamiento</div>
+     <div class="row" style="gap:8px">${PLAYERS.map(u=>`<span class="chip">🕵️ ${pname(u)}</span>`).join("")}<button class="btn ghost sm" onclick="PLAYERS=[];players()">Cambiar</button></div></div>
+   <div class="hero"><div><h1>${PLAYERS.length===2?"¡A investigar en pareja!":"¡A investigar!"}</h1>
+     <p>Cada misión tiene 3 etapas. Logra 70% en una etapa para abrir la siguiente.</p></div><div style="font-size:70px">🕵️</div></div>
+   <div class="missions">${MISSIONS.map((m,i)=>`
+     <button class="mcard" onclick="mission(${i})">
+       <div class="row" style="justify-content:space-between;align-items:center"><div class="ic" style="background:${m.c}22">${m.e}</div>
+         <div style="text-align:right">${PLAYERS.map(u=>lvlChip(level(u,m.id))).join("<br>")}</div></div>
+       <small class="muted" style="font-weight:800;text-transform:uppercase;letter-spacing:.06em;font-size:13px">Misión ${i+1}</small>
+       <h3>${m.n}</h3>
+       <div class="stages">${[0,1,2].map(s=>`<span class="stg ${stageDone(m.id,s)?'done':anyUnlocked(m.id,s)?'open':''}">${stageDone(m.id,s)?'✓':anyUnlocked(m.id,s)?'●':'🔒'} E${s+1}</span>`).join("")}</div>
+     </button>`).join("")}</div>`);
+}
+function mission(i){
+  SAY.length=0;
+  const m=MISSIONS[i];
+  $(`<div class="lhead"><button class="iconbtn" onclick="home()">←</button><h2 style="font-size:28px">${m.e} ${m.n}</h2></div>
+   <div class="panel">
+    <div class="row" style="justify-content:space-between;align-items:flex-start"><p class="lead" style="flex:1">${m.story}</p>${sayBtn(m.story+" "+m.tool.q)}</div>
+    <div class="tool" style="background:${m.c}"><div class="kicker" style="color:#fff;opacity:.85">🧰 Herramienta: ${m.tool.name}</div>
+      <div class="q">«${m.tool.q}»</div><p>${m.tool.ex}</p></div>
+    <div style="margin-bottom:10px">${PLAYERS.map(u=>`<div style="margin-bottom:6px">${pname(u)}: ${lvlChip(level(u,m.id))}${hasText(u,m.id)&&DB.valid[u+"|"+m.id]===undefined?' <span class="lvl lv0">✍️ escrito por revisar</span>':''}</div>`).join("")}</div>
+    ${[0,1,2].map(s=>{const open=anyUnlocked(m.id,s);const done=stageDone(m.id,s);
+      return `<button class="stagebtn" ${open?"":"disabled"} onclick="startStage(${i},${s})"><span class="n" style="background:${done?'var(--good)':m.c}">${done?'✓':s+1}</span>
+        <span><b>${STAGE_NAMES[s]}</b><span class="muted" style="font-size:16px">${open?(s===0?"Ejemplo resuelto + casos simples":s===1?"Casos más difíciles: ¡ojo con las trampas!":"Responde con tus palabras. Lo revisa tu profesor."):"🔒 Logra 70% en la etapa anterior"}</span></span></button>`;}).join("")}
+   </div>`);
+}
+
+/* ===================== FLUJO DE ETAPA ===================== */
+let R=null;
+function startStage(i,s){
+  const m=MISSIONS[i];
+  R={i,m,s,idx:0,a:Math.random().toString(36).slice(2,8),ok:0,n:0,hint:false,t0:0,inv:false};
+  if(s===0){ if(m.lab) return lab(); if(m.worked) return worked(0); }
+  if(s===2) return writeUI();
+  item();
+}
+function header(pct){return `<div class="lhead"><button class="iconbtn" aria-label="Salir" onclick="mission(R.i)">✕</button><div class="prog"><i style="width:${pct}%"></i></div><span class="chip">${R.m.e} E${R.s+1}</span></div>`;}
+function worked(k){
+  const w=R.m.worked;
+  $(`${header(4)}<div class="panel"><div class="kicker" style="color:${R.m.c}">Ejemplo resuelto</div>
+    <h2 style="font-size:30px">Así piensa un detective</h2><div class="quote">${w.text}</div>
+    <div class="steps">${w.steps.slice(0,k+1).map((s,j)=>`<div class="step fade"><span class="n">${j+1}</span><span>${s}</span></div>`).join("")}</div>
+    ${k<w.steps.length-1?`<button class="btn full" onclick="worked(${k+1})">Siguiente paso ▸</button>`:`<button class="btn y full" onclick="item()">¡Ahora es tu turno! ▸</button>`}</div>`);
+}
+const LAB_BASE="El colegio cambiará el horario del almuerzo a las 13:15.";
+const LAB=["¡¡ESCÁNDALO!! 😡 Te van a dejar SIN ALMUERZO. ¡Compártelo ANTES de que sea tarde!",
+ "La «Superintendencia Nacional de Almuerzos» (que no existe) confirma cambios graves en tu colegio.",
+ "Dicen que el colegio va a cambiar el almuerzo. Todos lo saben, nadie lo quiere contar.",
+ "Título: «¡COLEGIO ELIMINA EL ALMUERZO!» — Texto: el almuerzo será a las 13:15."];
+let labSeen=[];
+function lab(sel){
+  if(sel===undefined)labSeen=[]; else labSeen[sel]=true;
+  const all=[0,1,2,3].every(k=>labSeen[k]);
+  $(`${header(4)}<div class="panel"><div class="kicker" style="color:${R.m.c}">Laboratorio de trucos</div>
+    <h2 style="font-size:30px">Mira cómo se fabrica un engaño</h2>
+    <p class="muted">Esta es una noticia real y tranquila. Toca cada truco para ver cómo la deformarían.</p>
+    <div class="quote">📰 ${sel!==undefined?LAB[sel]:LAB_BASE}</div>
+    ${sel!==undefined?`<div class="fb info"><h3>${TRICKS[sel].e} ${TRICKS[sel].n}</h3><p>${TRICKS[sel].d}</p></div>`:""}
+    <div class="lab-tricks">${TRICKS.map((t,k)=>`<button class="opt ${sel===k?'sel':''}" onclick="lab(${k})"><span class="e">${t.e}</span>${t.n}${labSeen[k]?' ✓':''}</button>`).join("")}</div>
+    <button class="btn y full" ${all?'':'disabled'} onclick="item()">${all?'¡Listo! A detectar trucos ▸':'Prueba los 4 trucos para continuar'}</button></div>`);
+}
+const items=()=>R.m.stages[R.s].items;
+const cur=()=>items()[R.idx];
+function item(){
+  SAY.length=0;R.hint=false;R.inv=false;R.t0=Date.now();
+  if(R.idx>=items().length)return endStage();
+  const it=cur(),pct=8+84*(R.idx/items().length);
+  const kind=it.kind||R.m.type;
+  if(kind==="choice")return choiceUI(it,pct);
+  if(kind==="evidence")return evidenceUI(it,pct);
+  if(kind==="source")return sourceUI(it,pct);
+  if(kind==="dilemma")return dilemmaUI(it,pct);
+}
+const pairBox=()=>PLAYERS.length===2?`<div class="talk"><span class="e">👥</span><span>Antes de tocar: conversen. ¿Qué piensan y <u>por qué</u>? Deben estar de acuerdo.</span></div>`:"";
+const hintBtn=h=>h?`<div id="hintw"><button class="btn ghost sm" style="margin-top:12px" onclick="showHint()">💡 Pedir pista</button></div>`:"";
+function showHint(){R.hint=true;document.getElementById("hintw").innerHTML=`<div class="hintbox">💡 ${cur().h}</div>`;}
+function rec(ok,key){R.n++;if(ok)R.ok++;logEv({m:R.m.id,s:R.s,a:R.a,k:key,ok:ok?1:0,h:R.hint?1:0,inv:R.inv?1:0,t:Math.round((Date.now()-R.t0)/1000)});}
+const nextBtn=()=>`<button class="btn y full" style="margin-top:14px" onclick="R.idx++;item()">Siguiente ▸</button>`;
+function mark(sel,a,j){document.querySelectorAll(sel).forEach((b,k)=>{b.disabled=true;if(k===a)b.classList.add("good");else if(k===j)b.classList.add("bad");});const hw=document.getElementById("hintw");if(hw)hw.remove();}
+const key=()=>R.m.id+"."+R.s+"."+R.idx;
+
+function choiceUI(it,pct){
+  const opts=it.o?it.o.map(n=>({n})):R.m.opts, grid=opts.length===2&&!it.o;
+  $(`${header(pct)}<div class="challenge two">
+   <div class="stim"><span class="tag">📌 Caso ${R.idx+1} de ${items().length}</span>
+    <div class="row" style="justify-content:space-between;align-items:flex-start;flex-wrap:nowrap"><div class="text">${it.s}</div>${sayBtn(it.s)}</div>${hintBtn(it.h)}</div>
+   <div><div class="q2">${it.o?"¿Qué piensas?":R.m.q}</div>
+    <div class="opts ${grid?'grid2':''}">${opts.map((o,j)=>`<button class="opt ${grid?'center':''}" onclick="pickChoice(${j})">${o.e?`<span class="e">${o.e}</span>`:""}${o.n}</button>`).join("")}</div>
+    ${pairBox()}<div id="fb"></div></div></div>`);
+}
+function pickChoice(j){
+  const it=cur(),ok=j===it.a;mark(".opts .opt",it.a,j);rec(ok,key());
+  const tip=!it.o&&R.m.id==="m4"?TRICKS[it.a].d:!it.o&&R.m.id==="m5"?FALL[it.a].d:"";
+  const ans=it.o?it.o[it.a]:R.m.opts[it.a].n;
+  document.getElementById("fb").innerHTML=`<div class="fb ${ok?'good':'bad'} fade"><h3>${ok?"✔ ¡Bien razonado!":"✘ Esta vez no"}</h3><p>${ok?"":`La respuesta era <b>${ans}</b>. `}${it.x}</p>${tip?`<p class="tip">🧰 ${tip}</p>`:""}</div>${nextBtn()}`;
+  if(ok)confetti(14);
+}
+function evidenceUI(it,pct){
+  $(`${header(pct)}<div class="challenge two">
+   <div class="stim"><span class="tag">📣 Afirmación</span>
+    <div class="row" style="justify-content:space-between;flex-wrap:nowrap"><div class="text">«${it.claim}»</div>${sayBtn(it.claim+". "+it.s.join(". "))}</div>${hintBtn(it.h)}${pairBox()}</div>
+   <div><div class="q2">Toca la oración que lo demuestra</div>
+    <div id="sents">${it.s.map((s,j)=>`<button class="sent" onclick="pickEv(${j})">${s}</button>`).join("")}</div><div id="fb"></div></div></div>`);
+}
+function pickEv(j){const it=cur(),ok=j===it.a;mark("#sents .sent",it.a,j);rec(ok,key());
+  document.getElementById("fb").innerHTML=`<div class="fb ${ok?'good':'bad'} fade"><h3>${ok?"✔ ¡Encontraste la prueba!":"✘ Esa oración no lo demuestra"}</h3><p>${it.x}</p></div>${nextBtn()}`;if(ok)confetti(14);}
+function sourceUI(it,pct){
+  $(`${header(pct)}<div class="challenge two">
+   <div class="stim"><span class="tag">📱 Te llegó esto</span>
+    <div class="post"><div class="who"><span class="av">${it.av}</span>${it.who}</div><div class="text">${it.says}</div></div>
+    <div id="inv"><button class="btn full" style="margin-top:14px" onclick="investigate()">🔍 Investigar quién está detrás</button></div>${pairBox()}</div>
+   <div><div class="q2">¿Qué haces con esta información?</div>
+    <div class="opts"><button class="opt" disabled onclick="pickSrc(0)"><span class="e">✅</span>Es confiable</button><button class="opt" disabled onclick="pickSrc(1)"><span class="e">🤨</span>Hay que dudar</button></div>
+    <p class="muted" id="lock" style="margin-top:10px">🔒 Un buen detective investiga primero.</p><div id="fb"></div></div></div>`);
+}
+function investigate(){R.inv=true;document.getElementById("inv").innerHTML=`<div class="invest fade">🔍 <b>Lo que encontraste en otras fuentes:</b><br>${cur().inv}</div>`;
+  document.querySelectorAll(".opts .opt").forEach(b=>b.disabled=false);const l=document.getElementById("lock");if(l)l.remove();}
+function pickSrc(j){const it=cur(),ok=j===it.a;mark(".opts .opt",it.a,j);rec(ok,key());
+  document.getElementById("fb").innerHTML=`<div class="fb ${ok?'good':'bad'} fade"><h3>${ok?"✔ ¡Bien investigado!":"✘ Revisa lo que encontraste"}</h3><p>${it.x}</p></div>${nextBtn()}`;if(ok)confetti(14);}
+
+/* Dilemas: se evalúa la calidad de la razón, no la postura */
+let D={};
+const PERMS=[[1,0,2],[2,1,0],[0,2,1],[1,2,0],[2,0,1],[0,1,2]];
+const KTXT={f:"💪 Razón fuerte",d:"😐 Razón débil",t:"🪤 Razón tramposa"};
+function dilemmaUI(it,pct){
+  D={side:null};
+  $(`${header(pct)}<div class="panel"><span class="tag">💬 Dilema ${R.idx+1} de ${items().length}</span>
+    <div class="row" style="justify-content:space-between;align-items:center;margin:6px 0"><h2 style="font-size:30px;flex:1">${it.q}</h2>${sayBtn(it.q)}</div>
+    <p class="muted">No hay postura correcta: elige la que tú creas.</p>
+    <div class="opts grid2" style="margin-top:14px">${it.sides.map((s,j)=>`<button class="opt center" onclick="pickSide(${j})"><span class="e">${s.e}</span>${s.n}</button>`).join("")}</div>${pairBox()}</div>`);
+}
+function reasons(side,fn,seed){return `<div class="opts" id="rs">${PERMS[seed%6].map(k=>`<button class="opt" data-k="${k}" onclick="${fn}(${k})">${side.r[k].t}</button>`).join("")}</div>`;}
+function markR(side,ch){document.querySelectorAll("#rs .opt").forEach(b=>{const k=+b.dataset.k;b.disabled=true;if(side.r[k].k==="f")b.classList.add("good");else if(k===ch)b.classList.add("bad");
+  b.insertAdjacentHTML("beforeend",`<span style="margin-left:auto;font-size:15px;white-space:nowrap;padding-left:10px">${KTXT[side.r[k].k]}</span>`);});}
+function pickSide(j){D.side=j;R.t0=Date.now();const it=cur(),s=it.sides[j];
+  $(`${header(8+84*(R.idx/items().length))}<div class="panel"><div class="kicker" style="color:${R.m.c}">Tu postura: ${s.e} ${s.n}</div>
+    <h2 style="font-size:28px;margin-bottom:12px">¿Cuál es la razón más fuerte para tu postura?</h2>${reasons(s,"pickReason",R.idx*2+j+R.s)}<div id="fb"></div></div>`);}
+function rMsg(r){return r.k==="f"?"Explica el porqué y piensa en las personas afectadas.":r.k==="d"?"«Porque sí» no explica nada. Una razón fuerte da el porqué.":r.why;}
+function pickReason(k){const it=cur(),s=it.sides[D.side],r=s.r[k],ok=r.k==="f";markR(s,k);rec(ok,key()+".own");
+  document.getElementById("fb").innerHTML=`<div class="fb ${ok?'good':'bad'} fade"><h3>${ok?"✔ ¡Argumento sólido!":KTXT[r.k]}</h3><p>${rMsg(r)}</p></div>
+   ${it.other?`<button class="btn y full" style="margin-top:14px" onclick="otherSide()">Ahora ponte en el otro lado ▸</button>`:nextBtn()}`;if(ok)confetti(14);}
+function otherSide(){R.t0=Date.now();const it=cur(),o=it.sides[1-D.side];
+  $(`${header(8+84*((R.idx+.5)/items().length))}<div class="panel"><div class="kicker" style="color:${R.m.c}">🔄 Empatía de detective</div>
+   <h2 style="font-size:28px;margin-bottom:6px">Alguien eligió: ${o.e} ${o.n}</h2><p class="muted" style="margin-bottom:12px">¿Cuál es la mejor razón que podría dar?</p>
+   ${reasons(o,"pickOther",R.idx*2+(1-D.side)+3)}<div id="fb"></div></div>`);}
+function pickOther(k){const it=cur(),o=it.sides[1-D.side],r=o.r[k],ok=r.k==="f";markR(o,k);rec(ok,key()+".other");
+  document.getElementById("fb").innerHTML=`<div class="fb ${ok?'good':'bad'} fade"><h3>${ok?"✔ ¡Entendiste al otro lado!":KTXT[r.k]}</h3>
+   <p>${ok?"Reconocer una buena razón del otro lado no te obliga a cambiar de opinión, pero te ayuda a conversar mejor.":rMsg(r)+" La razón fuerte está marcada en verde."}</p></div>${nextBtn()}`;if(ok)confetti(14);}
+
+/* Etapa 3: respuesta escrita */
+function writeUI(){
+  SAY.length=0;const w=R.m.stages[2].write;
+  $(`${header(50)}<div class="panel"><div class="kicker" style="color:${R.m.c}">✍️ ${STAGE_NAMES[2]}</div>
+   <div class="tool" style="background:${R.m.c};margin-top:6px"><div class="kicker" style="color:#fff;opacity:.85">🧰 ${R.m.tool.name}</div><div class="q" style="font-size:23px">«${R.m.tool.q}»</div></div>
+   <div class="row" style="justify-content:space-between;align-items:flex-start;flex-wrap:nowrap"><h2 style="font-size:27px;flex:1">${w.q}</h2>${sayBtn(w.q+". "+w.fields.join(". "))}</div>
+   ${w.fields.map((f,j)=>`<label class="l">${j+1}. ${f}</label><textarea class="inp" id="w${j}" oninput="chkW()"></textarea>`).join("")}
+   ${PLAYERS.length===2?`<div class="talk"><span class="e">👥</span><span>Escriban juntos. Una persona escribe y la otra revisa con la herramienta.</span></div>`:""}
+   <button class="btn y full" id="send" style="margin-top:16px" disabled onclick="sendW()">Enviar al profesor ▸</button></div>`);
+}
+function chkW(){const w=R.m.stages[2].write;document.getElementById("send").disabled=!w.fields.every((_,j)=>document.getElementById("w"+j).value.trim().length>=3);}
+function sendW(){const w=R.m.stages[2].write;const txt=w.fields.map((f,j)=>f+": "+document.getElementById("w"+j).value.trim()).join("\n");
+  logEv({m:R.m.id,s:2,a:R.a,k:"txt",x:txt,ts2:Date.now()});
+  $(`<div class="panel result"><div class="medal">✍️</div><h1 style="font-size:34px">¡Respuesta enviada!</h1>
+   <p class="lead muted" style="margin:8px 0 16px">Tu profesor la va a revisar. Si cumple con la herramienta, alcanzarás el nivel 4 · Avanzado.</p>
+   <div class="row"><button class="btn y" onclick="home()">Volver a las misiones</button></div></div>`);confetti(40);}
+
+/* Fin de etapa y cierre metacognitivo */
+function endStage(){
+  const c=R.m.close;
+  $(`${header(94)}<div class="panel"><div class="kicker" style="color:${R.m.c}">🧠 Antes de terminar</div>
+   <h2 style="font-size:29px;margin-bottom:14px">${c.q}</h2><div class="opts" id="cl">${c.o.map((o,j)=>`<button class="opt" onclick="pickClose(${j})">${o}</button>`).join("")}</div><div id="fb"></div></div>`);
+}
+function pickClose(j){const c=R.m.close;document.querySelectorAll("#cl .opt").forEach((b,k)=>{b.disabled=true;if(k===c.a)b.classList.add("good");else if(k===j)b.classList.add("bad");});
+  logEv({m:R.m.id,s:R.s,a:R.a,k:"end"});
+  document.getElementById("fb").innerHTML=`<div class="fb ${j===c.a?'good':'info'} fade"><h3>${j===c.a?"✔ ¡Exacto!":"Recuerda la herramienta"}</h3><p>🧰 <b>${R.m.tool.name}:</b> «${R.m.tool.q}»</p></div>
+   <button class="btn y full" style="margin-top:14px" onclick="result()">Ver mi resultado ▸</button>`;}
+function result(){
+  const p=R.n?R.ok/R.n:0,pass=p>=.7,pc=Math.round(p*100);
+  $(`<div class="panel result"><div class="medal">${pass?R.m.e:"💪"}</div>
+   <h1 style="font-size:34px">${pass?"¡Etapa superada!":"¡Buen intento!"}</h1>
+   <p class="lead" style="margin:6px 0">${R.ok} de ${R.n} correctas (${pc}%)</p>
+   <p class="muted">${pass?(R.s<2?`Se abrió la ${STAGE_NAMES[R.s+1].split("·")[0].trim()}.`:""):"Necesitas 70% para abrir la siguiente etapa. Puedes repetirla cuando quieras."}</p>
+   <div style="margin:12px 0">${PLAYERS.map(u=>`<div>${pname(u)}: ${lvlChip(level(u,R.m.id))}</div>`).join("")}</div>
+   <div class="talk" style="text-align:left;margin:16px 0"><span class="e">🗣️</span><span><b>Para conversar:</b> ${R.m.talk}</span></div>
+   <div class="row"><button class="btn ghost" onclick="startStage(${R.i},${R.s})">↻ Repetir etapa</button>
+    ${pass&&R.s<2?`<button class="btn y" onclick="startStage(${R.i},${R.s+1})">Siguiente etapa ▸</button>`:`<button class="btn y" onclick="home()">Volver a las misiones</button>`}</div></div>`);
+  if(pass)confetti(60);
+}
+
+/* ===================== PANEL DOCENTE ===================== */
+function askPin(){
+  const m=modal(`<h2 style="font-size:28px">Panel docente</h2><p class="muted">Ingresa la clave${DB.pin==="1234"?" (inicial: 1234; cámbiala en «Datos»)":""}.</p>
+   <input class="inp" id="pn" type="password" inputmode="numeric" maxlength="8" style="margin-top:10px">
+   <div class="row" style="margin-top:16px"><button class="btn ghost" id="no">Cancelar</button><button class="btn y" id="ok">Entrar</button></div>`);
+  m.querySelector("#no").onclick=()=>m.remove();
+  const go=()=>{if(m.querySelector("#pn").value===DB.pin){m.remove();teacher("curso");}else toast("Clave incorrecta");};
+  m.querySelector("#ok").onclick=go;m.querySelector("#pn").onkeydown=e=>{if(e.key==="Enter")go();};
+  setTimeout(()=>m.querySelector("#pn").focus(),50);
+}
+const TABS=[["curso","📊 Curso"],["escritos","✍️ Revisar escritos"],["errores","⚠️ Errores frecuentes"],["datos","💾 Datos"],["guia","📘 Guía"]];
+function teacher(tab,arg){
+  const body={curso:tCurso,escritos:tEscritos,errores:tErrores,datos:tDatos,guia:tGuia,est:tEst}[tab](arg);
+  $(`<div class="lhead"><button class="iconbtn" onclick="players()">←</button><h2 style="font-size:28px">Panel docente</h2></div>
+   <div class="tabs">${TABS.map(([k,n])=>`<button class="${k===tab?'on':''}" onclick="teacher('${k}')">${n}</button>`).join("")}</div>${body}`);
+}
+const allStudents=()=>{const s=new Set(Object.keys(DB.students));DB.log.forEach(e=>s.add(e.u));return [...s].sort();};
+function pendingTexts(){const out=[];allStudents().forEach(u=>MISSIONS.forEach(m=>{const at=attempts(u,m.id,2).filter(x=>x.x).sort((a,b)=>b.ts-a.ts);if(at.length)out.push({u,m,x:at[0].x,ts:at[0].ts,v:DB.valid[u+"|"+m.id]});}));return out;}
+function tCurso(){
+  const st=allStudents();
+  if(!st.length)return `<div class="panel"><p class="lead">Aún no hay datos. Cuando los estudiantes jueguen, aquí verás sus niveles.</p></div>`;
+  const pend=pendingTexts().filter(p=>p.v===undefined).length;
+  const dist=MISSIONS.map(m=>{const c=[0,0,0,0,0];st.forEach(u=>c[level(u,m.id)]++);return c;});
+  return `<div class="panel">
+   <p class="muted">${st.length} estudiantes · ${DB.log.length} registros${pend?` · <b>${pend} escritos por revisar</b>`:""}. Toca un estudiante para ver su detalle.</p>
+   <div class="legend">${[1,2,3,4].map(l=>lvlChip(l)).join("")}</div>
+   <div class="scroll"><table class="tbl"><thead><tr><th>Estudiante</th>${MISSIONS.map((m,i)=>`<th class="c" title="${m.n}">${m.e} M${i+1}</th>`).join("")}<th class="c">Última actividad</th></tr></thead><tbody>
+   ${st.map(u=>{const last=Math.max(0,...DB.log.filter(e=>e.u===u).map(e=>e.ts));
+     return `<tr onclick="teacher('est','${esc(u)}')" style="cursor:pointer"><td><b>${pname(u)}</b></td>${MISSIONS.map(m=>{const l=level(u,m.id);return `<td class="c"><span class="lvl lv${l}">${l||"–"}</span>${hasText(u,m.id)&&DB.valid[u+"|"+m.id]===undefined?" ✍️":""}</td>`;}).join("")}<td class="c" style="font-size:14px">${last?new Date(last).toLocaleDateString("es-CL"):"—"}</td></tr>`;}).join("")}
+   <tr><td><b>Curso: logrado o más</b></td>${dist.map(c=>`<td class="c"><b>${Math.round((c[3]+c[4])/st.length*100)}%</b></td>`).join("")}<td></td></tr>
+   </tbody></table></div>
+   <p class="muted" style="font-size:15px;margin-top:10px">Niveles: 1 Inicial (intentó) · 2 En desarrollo (≥70% en Etapa 1) · 3 Logrado (≥70% en Etapa 2 con máx. 1 pista) · 4 Avanzado (Etapa 3 validada por usted). ✍️ = escrito por revisar. En parejas, la evidencia queda registrada para ambos.</p></div>`;
+}
+function tEst(u){
+  const evs=DB.log.filter(e=>e.u===u);
+  const rows=[];MISSIONS.forEach(m=>[0,1,2].forEach(s=>attempts(u,m.id,s).forEach(a=>rows.push({m,s,a}))));
+  rows.sort((x,y)=>y.a.ts-x.a.ts);
+  const hints=evs.filter(e=>e.h).length, q=evs.filter(e=>e.k&&e.k!=="end"&&e.k!=="txt").length;
+  const src=evs.filter(e=>e.m==="m3"&&e.k&&e.k.split(".").length===3);
+  return `<div class="panel"><h2 style="font-size:28px">${pname(u)}</h2>
+   <p class="muted">${q} respuestas · pistas usadas en ${q?Math.round(hints/q*100):0}% · tiempo promedio por caso ${q?Math.round(evs.filter(e=>e.t).reduce((s,e)=>s+e.t,0)/q):0} s</p>
+   <div class="row" style="margin:12px 0;gap:8px">${MISSIONS.map((m,i)=>`<span>${m.e} M${i+1} ${lvlChip(level(u,m.id))}</span>`).join("")}</div>
+   ${src.length?`<p class="muted">Lectura lateral: decidió después de investigar en ${Math.round(src.filter(e=>e.inv).length/src.length*100)}% de las fuentes.</p>`:""}
+   <h3 style="margin:16px 0 8px">Historial de intentos</h3>
+   <div class="scroll"><table class="tbl"><thead><tr><th>Fecha</th><th>Misión</th><th>Etapa</th><th class="c">Resultado</th><th class="c">Pistas</th></tr></thead><tbody>
+   ${rows.map(r=>`<tr><td style="font-size:14px">${new Date(r.a.ts).toLocaleString("es-CL",{dateStyle:"short",timeStyle:"short"})}</td><td>${r.m.e} ${r.m.n}</td><td>E${r.s+1}</td>
+     <td class="c">${r.s===2?(r.a.x?"✍️ escrito":"—"):`${r.a.ok}/${r.a.n} (${Math.round(r.a.p*100)}%)${r.a.done?"":" · incompleto"}`}</td><td class="c">${r.s===2?"":r.a.h}</td></tr>`).join("")||`<tr><td colspan="5">Sin intentos.</td></tr>`}
+   </tbody></table></div>
+   <button class="btn ghost sm" style="margin-top:14px" onclick="delStudent('${esc(u)}')">Eliminar estudiante y sus datos</button></div>`;
+}
+function delStudent(u){const m=modal(`<h2 style="font-size:26px">¿Eliminar a ${pname(u)}?</h2><p class="muted" style="margin:8px 0 16px">Se borrarán sus registros de esta tablet.</p>
+  <div class="row"><button class="btn ghost" id="no">Cancelar</button><button class="btn" id="ok">Eliminar</button></div>`);
+  m.querySelector("#no").onclick=()=>m.remove();
+  m.querySelector("#ok").onclick=()=>{delete DB.students[u];DB.log=DB.log.filter(e=>e.u!==u);Object.keys(DB.valid).forEach(k=>{if(k.startsWith(u+"|"))delete DB.valid[k];});PLAYERS=PLAYERS.filter(p=>p!==u);save();m.remove();teacher("curso");};}
+function tEscritos(){
+  const list=pendingTexts().sort((a,b)=>(a.v===undefined?0:1)-(b.v===undefined?0:1)||b.ts-a.ts);
+  if(!list.length)return `<div class="panel"><p class="lead">Aún no hay respuestas escritas (Etapa 3).</p></div>`;
+  return `<div class="panel"><p class="muted" style="margin-bottom:12px">Valide si la respuesta usa bien la herramienta (vea la rúbrica en la Guía). Al validar, el estudiante alcanza el nivel 4.</p>
+   ${list.map((p,i)=>`<div class="card2"><div class="row" style="justify-content:space-between;align-items:center"><b>${pname(p.u)} · ${p.m.e} ${p.m.n}</b>
+     <span class="lvl ${p.v===true?'lv4':p.v===false?'lv1':'lv0'}">${p.v===true?"Validado":p.v===false?"Aún no":"Por revisar"}</span></div>
+     <p style="white-space:pre-wrap;margin:10px 0;font-size:17px">${esc(p.x)}</p>
+     <div class="row" style="gap:8px"><button class="btn sm" onclick="setValid(${i},true)">✔ Validar nivel 4</button><button class="btn ghost sm" onclick="setValid(${i},false)">Aún no</button></div></div>`).join("")}</div>`;
+}
+let _pend=[];
+function setValid(i,v){_pend=pendingTexts().sort((a,b)=>(a.v===undefined?0:1)-(b.v===undefined?0:1)||b.ts-a.ts);const p=_pend[i];DB.valid[p.u+"|"+p.m.id]=v;save();teacher("escritos");}
+function itemText(k){const [m,s,i]=k.split(".");const M=MISSIONS.find(x=>x.id===m);const it=M&&M.stages[+s]&&M.stages[+s].items&&M.stages[+s].items[+i];if(!it)return k;
+  const t=it.s&&typeof it.s==="string"?it.s:it.claim||it.says||it.q||k;return `${M.e} M${MISSIONS.indexOf(M)+1}·E${+s+1} — ${t}${k.endsWith(".other")?" (otro lado)":k.endsWith(".own")?" (razón propia)":""}`;}
+function tErrores(){
+  const agg={};DB.log.forEach(e=>{if(!e.k||e.k==="end"||e.k==="txt")return;(agg[e.k]=agg[e.k]||{n:0,bad:0,h:0});agg[e.k].n++;if(!e.ok)agg[e.k].bad++;if(e.h)agg[e.k].h++;});
+  const list=Object.entries(agg).filter(([,v])=>v.n>=3).sort((a,b)=>b[1].bad/b[1].n-a[1].bad/a[1].n).slice(0,12);
+  if(!list.length)return `<div class="panel"><p class="lead">Se necesitan al menos 3 respuestas por caso para mostrar errores frecuentes.</p></div>`;
+  return `<div class="panel"><p class="muted" style="margin-bottom:12px">Casos con más errores en el curso. Úselos para el inicio de la próxima clase.</p>
+   ${list.map(([k,v])=>`<div class="card2"><b style="font-size:17px">${esc(itemText(k))}</b>
+     <div class="row" style="justify-content:space-between;font-size:15px;margin-top:4px"><span>${Math.round(v.bad/v.n*100)}% erró · ${v.n} respuestas</span><span>pidió pista: ${Math.round(v.h/v.n*100)}%</span></div>
+     <div class="bar"><i style="width:${Math.round(v.bad/v.n*100)}%"></i></div></div>`).join("")}</div>`;
+}
+/* Exportar / importar entre tablets */
+function exportCode(){const data={v:2,dev:DB.dev,students:DB.students,valid:DB.valid,log:DB.log.map(e=>[e.id,e.u,e.m,e.s,e.a,e.k,e.ok?1:0,e.h?1:0,e.inv?1:0,e.t||0,e.ts,e.x||""])};
+  return "DP2:"+btoa(unescape(encodeURIComponent(JSON.stringify(data))));}
+function importCode(code){
+  code=code.trim();if(!code.startsWith("DP2:"))throw new Error("formato");
+  const d=JSON.parse(decodeURIComponent(escape(atob(code.slice(4)))));
+  const have=new Set(DB.log.map(e=>e.id));let added=0;
+  d.log.forEach(r=>{if(have.has(r[0]))return;DB.log.push({id:r[0],u:r[1],m:r[2],s:r[3],a:r[4],k:r[5],ok:r[6],h:r[7],inv:r[8],t:r[9],ts:r[10],x:r[11]||undefined});added++;});
+  Object.entries(d.students||{}).forEach(([k,v])=>{if(!DB.students[k])DB.students[k]=v;});
+  Object.entries(d.valid||{}).forEach(([k,v])=>{if(DB.valid[k]===undefined)DB.valid[k]=v;});
+  save();return added;
+}
+function csv(){const h=["fecha","estudiante","nombre","mision","etapa","caso","correcto","pista","investigo","segundos","texto"];
+  const q=s=>`"${String(s??"").replace(/"/g,'""')}"`;
+  return [h.join(",")].concat(DB.log.filter(e=>e.k!=="end").map(e=>[new Date(e.ts).toLocaleString("es-CL"),e.u,(DB.students[e.u]||{}).name||"",e.m,+e.s+1,e.k==="txt"?"escrito":itemText(e.k),e.k==="txt"?"":e.ok,e.k==="txt"?"":e.h,e.inv||0,e.t||"",e.x||""].map(q).join(","))).join("\n");}
+async function copyText(t,label){try{await navigator.clipboard.writeText(t);toast(label+" copiado ✓");}catch(e){
+  const m=modal(`<h2 style="font-size:24px">Copia este texto</h2><p class="muted">Mantén presionado, selecciona todo y copia.</p><textarea class="inp" style="min-height:200px;font-size:13px" readonly>${esc(t)}</textarea><button class="btn y full" style="margin-top:12px" id="ok">Listo</button>`);
+  m.querySelector("textarea").select();m.querySelector("#ok").onclick=()=>m.remove();}}
+function tDatos(){
+  return `<div class="panel"><h3 style="font-size:24px">Juntar los resultados del curso</h3>
+   <ol style="padding-left:24px;margin:8px 0 14px"><li>En cada tablet: <b>Copiar código de esta tablet</b>.</li><li>Pégalo en tu tablet o computador, en «Importar» (puedes enviártelo por correo o chat).</li><li>Repite con cada tablet. Los datos repetidos no se duplican.</li></ol>
+   <div class="row" style="gap:10px"><button class="btn" onclick="copyText(exportCode(),'Código')">📤 Copiar código de esta tablet</button>
+    <button class="btn ghost" onclick="copyText(csv(),'Tabla')">📋 Copiar tabla para Excel / Sheets</button></div>
+   <label class="l" style="margin-top:20px">📥 Importar código de otra tablet</label><textarea class="inp" id="imp" placeholder="Pega aquí el código que empieza con DP2:"></textarea>
+   <button class="btn y" style="margin-top:10px" onclick="doImport()">Importar</button>
+   <h3 style="font-size:24px;margin-top:26px">Ajustes</h3>
+   <p class="muted">Esta tablet: <b>${DB.dev}</b> · ${Object.keys(DB.students).length} perfiles · ${DB.log.length} registros</p>
+   <div class="row" style="gap:10px;margin-top:10px"><button class="btn ghost" onclick="changePin()">🔑 Cambiar clave</button><button class="btn ghost" onclick="wipe()">🗑️ Borrar todos los datos de esta tablet</button></div>
+   <p class="muted" style="font-size:15px;margin-top:14px">Los datos se guardan solo en el navegador de esta tablet. Si se borran los datos del navegador, se pierden: copie el código al final de cada clase.</p></div>`;
+}
+function doImport(){const v=document.getElementById("imp").value;try{const n=importCode(v);toast(`Importados ${n} registros nuevos`);teacher("curso");}catch(e){toast("El código no es válido");}}
+function changePin(){const m=modal(`<h2 style="font-size:26px">Nueva clave</h2><input class="inp" id="p1" type="password" inputmode="numeric" maxlength="8" style="margin-top:10px">
+  <div class="row" style="margin-top:16px"><button class="btn ghost" id="no">Cancelar</button><button class="btn y" id="ok">Guardar</button></div>`);
+  m.querySelector("#no").onclick=()=>m.remove();m.querySelector("#ok").onclick=()=>{const v=m.querySelector("#p1").value.trim();if(v.length<4){toast("Mínimo 4 caracteres");return;}DB.pin=v;save();m.remove();toast("Clave cambiada");};}
+function wipe(){const m=modal(`<h2 style="font-size:26px">¿Borrar todo?</h2><p class="muted" style="margin:8px 0 16px">Se borrarán perfiles y registros de esta tablet. Copie antes el código si quiere conservarlos.</p>
+  <div class="row"><button class="btn ghost" id="no">Cancelar</button><button class="btn" id="ok">Borrar todo</button></div>`);
+  m.querySelector("#no").onclick=()=>m.remove();m.querySelector("#ok").onclick=()=>{const pin=DB.pin,dev=DB.dev;DB={dev,seq:0,pin,students:{},log:[],valid:{}};PLAYERS=[];save();m.remove();players();};}
+function tGuia(){
+  return `<div class="panel guide"><h2 style="font-size:28px">Guía rápida</h2>
+   <h3>Progresión de la habilidad</h3>
+   <ul><li><b>1 · Inicial:</b> intentó la misión, pero aún no logra 70% en la Etapa 1.</li><li><b>2 · En desarrollo:</b> logra 70% o más en la Etapa 1 (casos simples).</li>
+   <li><b>3 · Logrado:</b> logra 70% o más en la Etapa 2 (casos con trampa) usando como máximo 1 pista.</li><li><b>4 · Avanzado:</b> responde por escrito en la Etapa 3 y usted lo valida.</li></ul>
+   <h3>Qué se registra como evidencia</h3>
+   <ul><li>Cada respuesta: correcta o no, si pidió pista y cuántos segundos tardó.</li><li>Misión 3: si investigó la fuente antes de decidir.</li><li>Misión 6: la calidad de la razón propia y la del otro lado (no la postura).</li><li>Etapa 3: la respuesta escrita completa.</li></ul>
+   <h3>Recomendaciones</h3>
+   <ul><li>Para evidencia individual (diagnóstico y cierre de la unidad), haga jugar de a uno.</li><li>Copie el código de cada tablet al final de la clase y júntelos en su dispositivo.</li><li>Use códigos en vez de nombres completos.</li></ul>
+   <h3>Base científica</h3>
+   <div class="ev"><b>Enseñanza explícita aplicada a contenidos</b>Abrami et al. (2015): efecto promedio g = 0,30; con diálogo, problemas auténticos y mentoría, g = 0,57.</div>
+   <div class="ev"><b>Retroalimentación informativa</b>Wisniewski, Zierer y Hattie (2020): el efecto depende de la información que entrega; el elogio solo es lo menos efectivo.</div>
+   <div class="ev"><b>Inoculación contra la desinformación</b>Roozenbeek y van der Linden (2019): practicar con los trucos redujo la credibilidad de noticias falsas.</div>
+   <div class="ev"><b>Lectura lateral</b>Wineburg y McGrew (2019): los verificadores investigan la fuente fuera de la página.</div>
+   <div class="ev"><b>Diálogo filosófico</b>EEF (2015): Filosofía para Niños mostró avances adicionales en lectura y matemática.</div>
+   <div class="ev"><b>Gamificación con relato y colaboración</b>Sailer y Homner (2020): efectos pequeños pero positivos.</div></div>`;
+}
+players();
+</script>
+</body>
+</html>
