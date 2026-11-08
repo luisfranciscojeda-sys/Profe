@@ -3,7 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Detectives del Pensamiento v2</title>
+<title>Detectives del Pensamiento</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;800&family=Nunito:wght@500;700;800&display=swap" rel="stylesheet">
 <style>
@@ -288,7 +289,8 @@ const stageDone=(m,s)=>PLAYERS.length&&PLAYERS.every(u=>s<2?(bestPct(u,m,s)??0)>
 
 /* ===================== UTILIDADES ===================== */
 const app=document.getElementById("app");
-const $=h=>{app.innerHTML=`<div class="fade">${h}</div>`;window.scrollTo(0,0);};
+let TIMERS=[];const clearTimers=()=>{TIMERS.forEach(clearInterval);TIMERS=[];};
+const $=h=>{clearTimers();app.innerHTML=`<div class="fade">${h}</div>`;window.scrollTo(0,0);};
 const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 const canSpeak=("speechSynthesis" in window);
 function speak(t){try{speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(t);u.lang="es-CL";u.rate=.95;speechSynthesis.speak(u);}catch(e){}}
@@ -533,11 +535,12 @@ function askPin(){
   m.querySelector("#ok").onclick=go;m.querySelector("#pn").onkeydown=e=>{if(e.key==="Enter")go();};
   setTimeout(()=>m.querySelector("#pn").focus(),50);
 }
-const TABS=[["curso","📊 Curso"],["escritos","✍️ Revisar escritos"],["errores","⚠️ Errores frecuentes"],["datos","💾 Datos"],["guia","📘 Guía"]];
+const TABS=[["vivo","🔴 En vivo"],["curso","📊 Curso"],["escritos","✍️ Revisar escritos"],["errores","⚠️ Errores frecuentes"],["datos","💾 Datos"],["guia","📘 Guía"]];
 function teacher(tab,arg){
-  const body={curso:tCurso,escritos:tEscritos,errores:tErrores,datos:tDatos,guia:tGuia,est:tEst}[tab](arg);
+  const body={vivo:tVivo,curso:tCurso,escritos:tEscritos,errores:tErrores,datos:tDatos,guia:tGuia,est:tEst}[tab](arg);
   $(`<div class="lhead"><button class="iconbtn" onclick="players()">←</button><h2 style="font-size:28px">Panel docente</h2></div>
    <div class="tabs">${TABS.map(([k,n])=>`<button class="${k===tab?'on':''}" onclick="teacher('${k}')">${n}</button>`).join("")}</div>${body}`);
+  if(tab==="vivo")vivoMount();
 }
 const allStudents=()=>{const s=new Set(Object.keys(DB.students));DB.log.forEach(e=>s.add(e.u));return [...s].sort();};
 function pendingTexts(){const out=[];allStudents().forEach(u=>MISSIONS.forEach(m=>{const at=attempts(u,m.id,2).filter(x=>x.x).sort((a,b)=>b.ts-a.ts);if(at.length)out.push({u,m,x:at[0].x,ts:at[0].ts,v:DB.valid[u+"|"+m.id]});}));return out;}
@@ -653,7 +656,190 @@ function tGuia(){
    <div class="ev"><b>Diálogo filosófico</b>EEF (2015): Filosofía para Niños mostró avances adicionales en lectura y matemática.</div>
    <div class="ev"><b>Gamificación con relato y colaboración</b>Sailer y Homner (2020): efectos pequeños pero positivos.</div></div>`;
 }
-players();
+/* ===================== MODO EN VIVO ===================== */
+const QS=new URLSearchParams(location.search);
+const LIVE_MISSIONS=["m1","m4","m5"]; // misiones de opción múltiple disponibles en vivo
+const apiUrl=id=>"https://script.google.com/macros/s/"+id+"/exec";
+async function api(id,params){
+  const r=await fetch(apiUrl(id)+"?"+new URLSearchParams(params),{redirect:"follow"});
+  const j=await r.json(); if(!j.ok) throw new Error(j.error||"Error del servidor"); return j;
+}
+const liveItems=mid=>{const m=MISSIONS.find(x=>x.id===mid);return m.stages[0].items.map((it,i)=>({it,key:mid+".0."+i})).concat(m.stages[1].items.map((it,i)=>({it,key:mid+".1."+i})));};
+function every(ms,fn){fn();TIMERS.push(setInterval(fn,ms));}
+
+/* ----- Estudiantes ----- */
+let L=null;
+function liveSave(){try{sessionStorage.setItem("dp_live",JSON.stringify(L));}catch(e){}}
+function liveStart(){
+  const sala=QS.get("sala"),id=QS.get("api");
+  try{const s=JSON.parse(sessionStorage.getItem("dp_live")||"null");if(s&&s.sala===sala&&s.api===id){L=s;return L.done?liveDone():L.equipo?liveLobby():liveJoin();}}catch(e){}
+  L={sala,api:id,equipo:null,nombre:"",m:"m1",idx:0,ok:0,queue:[],done:false};liveJoin();
+}
+function liveJoin(err){
+  $(`<div class="top"><div class="brand"><div class="b">🔍</div>Detectives del Pensamiento</div><span class="chip">🔴 Sala ${esc(L.sala)}</span></div>
+   <div class="panel" style="max-width:640px;margin:4vh auto 0">
+    <div style="font-size:64px">🕵️🕵️</div><h1 style="font-size:36px">¡Bienvenidos, detectives!</h1>
+    <p class="muted">Inventen un nombre para su equipo. Así los verá su profesor en la pantalla.</p>
+    <label class="l">Nombre del equipo</label><input class="inp" id="tn" maxlength="24" placeholder="Ej: Los Cóndores" value="${esc(L.nombre)}">
+    <label class="l">Sus nombres o códigos (opcional)</label><input class="inp" id="ti" maxlength="40" placeholder="Ej: 5B-03 y 5B-11">
+    ${err?`<div class="fb bad"><p>${esc(err)}</p></div>`:""}
+    <button class="btn y full" id="jb" style="margin-top:16px" onclick="liveDoJoin()">Entrar a la sala ▸</button></div>`);
+}
+async function liveDoJoin(){
+  const n=document.getElementById("tn").value.trim(),i=document.getElementById("ti").value.trim();
+  if(!n){toast("Escriban el nombre del equipo");return;}
+  const b=document.getElementById("jb");b.disabled=true;b.textContent="Entrando…";
+  try{const r=await api(L.api,{a:"unirse",sala:L.sala,nombre:n,integrantes:i});L.equipo=r.equipoId;L.nombre=n;L.m=r.mision||"m1";liveSave();liveLobby();}
+  catch(e){L.nombre=n;liveJoin(e.message==="Failed to fetch"?"No hay conexión con la sala. Revisen internet y vuelvan a intentar.":e.message);}
+}
+function liveLobby(){
+  const m=MISSIONS.find(x=>x.id===L.m);
+  $(`<div class="top"><div class="brand"><div class="b">🔍</div>Detectives del Pensamiento</div><span class="chip">🔴 Sala ${esc(L.sala)} · ${esc(L.nombre)}</span></div>
+   <div class="panel" style="text-align:center">
+    <div style="font-size:70px">⏳</div><h1 style="font-size:36px">¡Están en la sala!</h1>
+    <p class="lead muted">Esperen a que su profesor dé la partida. Misión: <b>${m.e} ${m.n}</b></p>
+    <div class="tool" style="background:${m.c};text-align:left;margin:20px 0"><div class="kicker" style="color:#fff;opacity:.85">🧰 Mientras esperan, recuerden la herramienta</div><div class="q" style="font-size:25px">«${m.tool.q}»</div></div>
+    <h3 style="font-size:22px;margin:8px 0">Equipos conectados: <span id="ln">…</span></h3>
+    <div id="lt" class="row" style="justify-content:center;gap:8px"></div></div>`);
+  every(3000,async()=>{try{const r=await api(L.api,{a:"estado",sala:L.sala});
+    const ln=document.getElementById("ln"),lt=document.getElementById("lt");if(!ln)return;
+    ln.textContent=r.equipos.length;lt.innerHTML=r.equipos.map(t=>`<span class="chip"${t===L.nombre?' style="border-color:var(--navy);background:#EEF0FB"':''}>🕵️ ${esc(t)}</span>`).join("");
+    if(r.estado==="jugando"){L.m=r.mision||L.m;liveSave();liveItem();}else if(r.estado==="terminado")liveDone();}catch(e){}});
+}
+let LT0=0,LHint=false;
+function liveItem(){
+  const list=liveItems(L.m),m=MISSIONS.find(x=>x.id===L.m);
+  if(L.idx>=list.length){L.done=true;liveSave();return liveDone();}
+  const {it}=list[L.idx];LT0=Date.now();LHint=false;SAY.length=0;
+  $(`<div class="lhead"><span class="chip">🔴 ${esc(L.nombre)}</span><div class="prog"><i style="width:${Math.round(L.idx/list.length*100)}%"></i></div><span class="chip">${L.idx+1}/${list.length}</span></div>
+   <div class="challenge two"><div class="stim"><span class="tag">📌 Caso ${L.idx+1}</span>
+     <div class="row" style="justify-content:space-between;align-items:flex-start;flex-wrap:nowrap"><div class="text">${it.s}</div>${sayBtn(it.s)}</div>
+     ${it.h?`<div id="hintw"><button class="btn ghost sm" style="margin-top:12px" onclick="liveHint()">💡 Pedir pista</button></div>`:""}</div>
+    <div><div class="q2">${m.q}</div>
+     <div class="opts ${m.opts.length===2?'grid2':''}">${m.opts.map((o,j)=>`<button class="opt ${m.opts.length===2?'center':''}" onclick="livePick(${j})">${o.e?`<span class="e">${o.e}</span>`:""}${o.n}</button>`).join("")}</div>
+     <div class="talk"><span class="e">👥</span><span>Conversen antes de tocar: ¿qué piensan y <u>por qué</u>?</span></div><div id="fb"></div></div></div>`);
+}
+function liveHint(){LHint=true;const {it}=liveItems(L.m)[L.idx];document.getElementById("hintw").innerHTML=`<div class="hintbox">💡 ${it.h}</div>`;}
+function livePick(j){
+  const list=liveItems(L.m),m=MISSIONS.find(x=>x.id===L.m),{it,key}=list[L.idx],ok=j===it.a;
+  document.querySelectorAll(".opts .opt").forEach((b,k)=>{b.disabled=true;if(k===it.a)b.classList.add("good");else if(k===j)b.classList.add("bad");});
+  const hw=document.getElementById("hintw");if(hw)hw.remove();
+  if(ok)L.ok++;
+  L.queue.push({a:"responder",sala:L.sala,equipo:L.equipo,nombre:L.nombre,item:L.idx,caso:key,eleccion:j,correcta:ok?1:0,pista:LHint?1:0,seg:Math.round((Date.now()-LT0)/1000)});
+  L.idx++;liveSave();liveFlush();
+  const tip=L.m==="m4"?TRICKS[it.a].d:L.m==="m5"?FALL[it.a].d:"";
+  document.getElementById("fb").innerHTML=`<div class="fb ${ok?'good':'bad'} fade"><h3>${ok?"✔ ¡Bien razonado!":"✘ Esta vez no"}</h3><p>${ok?"":`La respuesta era <b>${m.opts[it.a].n}</b>. `}${it.x}</p>${tip?`<p class="tip">🧰 ${tip}</p>`:""}</div>
+   <button class="btn y full" style="margin-top:14px" onclick="liveItem()">${L.idx>=list.length?"Terminar ▸":"Siguiente ▸"}</button>
+   <p class="muted" id="sync" style="font-size:14px;margin-top:8px;text-align:center"></p>`;
+  if(ok)confetti(14);
+}
+let flushing=false;
+async function liveFlush(){
+  if(flushing)return;flushing=true;
+  while(L.queue.length){try{await api(L.api,L.queue[0]);L.queue.shift();liveSave();}catch(e){const s=document.getElementById("sync");if(s)s.textContent="⏳ Reintentando enviar respuestas…";flushing=false;setTimeout(liveFlush,4000);return;}}
+  const s=document.getElementById("sync");if(s)s.textContent="✓ Respuestas enviadas";flushing=false;
+}
+function liveDone(){
+  const n=liveItems(L.m).length;
+  $(`<div class="panel result"><div class="medal">🏅</div><h1 style="font-size:36px">¡Misión cumplida, ${esc(L.nombre)}!</h1>
+   <p class="lead" style="margin:8px 0">${L.ok} de ${n} correctas</p>
+   <p class="muted" id="sync">${L.queue.length?"⏳ Enviando respuestas…":"✓ Todas sus respuestas llegaron al profesor."}</p>
+   <div class="talk" style="text-align:left;margin:18px 0"><span class="e">🗣️</span><span>Mientras esperan: ¿qué caso les costó más y por qué?</span></div></div>`);
+  if(L.queue.length)liveFlush();
+  confetti(50);
+}
+
+/* ----- Panel docente: en vivo ----- */
+if(!DB.live)DB.live={id:"",clave:"",m:"m1",sala:"",estado:""};
+function tVivo(){
+  const V=DB.live;
+  if(!V.id||!V.clave) return `<div class="panel"><h2 style="font-size:28px">Conectar la base de datos en vivo</h2>
+   <p class="muted" style="margin:6px 0 12px">Una sola vez: los resultados en vivo se guardan en una hoja de Google Sheets tuya.</p>
+   <ol style="padding-left:24px;font-size:17px">
+    <li>Crea una hoja nueva en <b>sheets.new</b> (mejor con tu Gmail personal).</li>
+    <li>Menú <b>Extensiones → Apps Script</b>. Borra todo y pega el código del archivo <b>Codigo.gs</b>.</li>
+    <li>Cambia <code>cambia-esta-clave</code> por una clave tuya y guarda.</li>
+    <li><b>Implementar → Nueva implementación</b> → tipo <b>Aplicación web</b>. Ejecutar como: <b>Yo</b>. Acceso: <b>Cualquier persona</b>. Autoriza y copia la URL.</li>
+   </ol>
+   <label class="l">URL de la aplicación web</label><input class="inp" id="vu" placeholder="https://script.google.com/macros/s/…/exec" value="${esc(V.id?apiUrl(V.id):"")}">
+   <label class="l">Clave docente (la que pusiste en el código)</label><input class="inp" id="vk" type="password" value="${esc(V.clave)}">
+   <button class="btn y" style="margin-top:14px" onclick="vivoConnect()">Probar y guardar</button><div id="vmsg"></div></div>`;
+  if(!V.sala) return `<div class="panel"><h2 style="font-size:28px">Nueva sala en vivo</h2>
+   <p class="muted" style="margin:6px 0 12px">Elige la misión. Los equipos responden la Etapa 1 y la Etapa 2 seguidas.</p>
+   <div class="opts">${LIVE_MISSIONS.map(id=>{const m=MISSIONS.find(x=>x.id===id);return `<button class="opt ${V.m===id?'sel':''}" onclick="DB.live.m='${id}';save();teacher('vivo')"><span class="e">${m.e}</span>${m.n} · ${liveItems(id).length} casos</button>`;}).join("")}</div>
+   <div class="row" style="margin-top:16px"><button class="btn y" onclick="vivoCreate()">🔴 Crear sala</button><button class="btn ghost" onclick="DB.live.id='';save();teacher('vivo')">Cambiar conexión</button></div><div id="vmsg"></div></div>`;
+  const m=MISSIONS.find(x=>x.id===V.m);
+  return `<div class="panel"><div class="row" style="justify-content:space-between;align-items:center">
+    <div><div class="kicker" style="color:var(--bad)">🔴 Sala en vivo · ${m.e} ${m.n}</div><h2 style="font-size:54px;line-height:1">Sala ${esc(V.sala)}</h2></div>
+    <div class="row" style="gap:8px" id="vbtns"></div></div>
+   <div class="challenge two" style="margin-top:16px">
+    <div style="text-align:center"><div id="qr" style="display:inline-block;background:#fff;padding:14px;border-radius:18px;border:2px solid var(--line)"></div>
+      <p style="font-size:14px;word-break:break-all;margin-top:8px" class="muted">${esc(vivoLink())}</p>
+      <button class="btn ghost sm" style="margin-top:6px" onclick="copyText(vivoLink(),'Link')">Copiar link</button></div>
+    <div><h3 style="font-size:24px;margin-bottom:8px">Equipos en la sala: <span id="vn">0</span></h3><div id="vteams" class="row" style="gap:8px"></div></div>
+   </div>
+   <div id="vres" style="margin-top:20px"></div>
+   <p class="muted" style="font-size:14px;margin-top:12px">Se actualiza solo cada 4 segundos. Todo queda guardado en tu Google Sheets (pestañas Salas, Equipos y Respuestas).</p></div>`;
+}
+const vivoLink=()=>location.origin+location.pathname+"?sala="+DB.live.sala+"&api="+DB.live.id;
+async function vivoConnect(){
+  const u=document.getElementById("vu").value.trim(),k=document.getElementById("vk").value,msg=document.getElementById("vmsg");
+  const mm=u.match(/macros\/s\/([A-Za-z0-9_-]+)/);
+  if(!mm){msg.innerHTML=`<div class="fb bad"><p>La URL debe verse así: https://script.google.com/macros/s/…/exec</p></div>`;return;}
+  msg.innerHTML=`<p class="muted" style="margin-top:10px">Probando conexión…</p>`;
+  try{const r=await api(mm[1],{a:"ping",clave:k});if(!r.docente)throw new Error("La clave docente no coincide con la del código.");DB.live.id=mm[1];DB.live.clave=k;save();toast("Conexión lista ✓");teacher("vivo");}
+  catch(e){msg.innerHTML=`<div class="fb bad"><p>${esc(e.message==="Failed to fetch"?"No se pudo conectar. Revisa que la implementación tenga acceso «Cualquier persona».":e.message)}</p></div>`;}
+}
+async function vivoCreate(){
+  const msg=document.getElementById("vmsg");msg.innerHTML=`<p class="muted" style="margin-top:10px">Creando sala…</p>`;
+  try{const r=await api(DB.live.id,{a:"crear",clave:DB.live.clave,mision:DB.live.m});DB.live.sala=r.sala;DB.live.estado="espera";save();teacher("vivo");}
+  catch(e){msg.innerHTML=`<div class="fb bad"><p>${esc(e.message)}</p></div>`;}
+}
+async function vivoState(est){
+  try{await api(DB.live.id,{a:est==="jugando"?"iniciar":"terminar",sala:DB.live.sala,clave:DB.live.clave});DB.live.estado=est;save();vivoRefresh();}catch(e){toast(e.message);}
+}
+function vivoButtons(est){
+  const b=document.getElementById("vbtns");if(!b)return;
+  b.innerHTML=est==="espera"?`<button class="btn y" onclick="vivoState('jugando')">▶ Comenzar desafío</button>`
+   :est==="jugando"?`<button class="btn" onclick="vivoState('terminado')">■ Terminar</button>`
+   :`<span class="chip">Sala terminada</span><button class="btn y" onclick="DB.live.sala='';save();teacher('vivo')">Nueva sala</button>`;
+}
+function vivoMount(){
+  const V=DB.live;if(!V.id||!V.sala)return;
+  const q=document.getElementById("qr");
+  try{if(window.QRCode)new QRCode(q,{text:vivoLink(),width:300,height:300,colorDark:"#22305E",colorLight:"#ffffff"});else q.innerHTML='<p class="muted" style="width:260px">No se pudo cargar el QR. Usa el link.</p>';}catch(e){}
+  vivoButtons(V.estado||"espera");
+  every(4000,vivoRefresh);
+}
+async function vivoRefresh(){
+  const V=DB.live;let r;
+  try{r=await api(V.id,{a:"resultados",sala:V.sala,clave:V.clave});}catch(e){const d=document.getElementById("vres");if(d)d.innerHTML=`<p class="muted">⚠️ Sin conexión con la hoja: ${esc(e.message)}</p>`;return;}
+  if(!document.getElementById("vres"))return;
+  if(r.estado!==V.estado){V.estado=r.estado;save();}vivoButtons(r.estado);
+  const list=liveItems(r.mision||V.m),N=list.length;
+  document.getElementById("vn").textContent=r.equipos.length;
+  document.getElementById("vteams").innerHTML=r.equipos.map(t=>`<span class="chip">🕵️ ${esc(t.nombre)}</span>`).join("")||`<p class="muted">Esperando que escaneen el QR…</p>`;
+  if(r.estado==="espera"){document.getElementById("vres").innerHTML="";return;}
+  const tot=r.equipos.reduce((s,t)=>s+t.n,0),okT=r.equipos.reduce((s,t)=>s+t.ok,0),fin=r.equipos.filter(t=>t.n>=N).length;
+  const eqs=[...r.equipos].sort((a,b)=>b.n-a.n||b.ok-a.ok);
+  const items=list.map((x,i)=>{const s=r.items[i]||{n:0,ok:0};return {i,txt:x.it.s,n:s.n,ok:s.ok,p:s.n?s.ok/s.n:null};});
+  const worst=items.filter(x=>x.n>=2).sort((a,b)=>a.p-b.p)[0];
+  document.getElementById("vres").innerHTML=`
+   <div class="row" style="gap:12px;margin-bottom:16px">
+    <div class="card2" style="flex:1;margin:0"><b style="font-size:36px">${tot?Math.round(okT/tot*100):0}%</b><br><span class="muted">aciertos del curso</span></div>
+    <div class="card2" style="flex:1;margin:0"><b style="font-size:36px">${fin}/${r.equipos.length}</b><br><span class="muted">equipos terminaron</span></div>
+    <div class="card2" style="flex:2;margin:0"><b>⚠️ Caso más difícil</b><br>${worst?`<span>${esc(worst.txt)}</span> <b style="color:var(--bad)">${Math.round(worst.p*100)}% acierta</b>`:'<span class="muted">Aún sin datos suficientes</span>'}</div></div>
+   <div class="challenge two">
+    <div><h3 style="font-size:22px;margin-bottom:8px">Equipos</h3><div class="scroll"><table class="tbl"><thead><tr><th>Equipo</th><th>Avance</th><th class="c">Aciertos</th><th class="c">Pistas</th></tr></thead><tbody>
+     ${eqs.map(t=>`<tr><td><b>${esc(t.nombre)}</b></td><td style="min-width:120px"><div class="bar"><i style="width:${Math.round(t.n/N*100)}%;background:var(--navy)"></i></div><span style="font-size:13px">${t.n}/${N}</span></td><td class="c">${t.n?Math.round(t.ok/t.n*100)+"%":"–"}</td><td class="c">${t.pistas}</td></tr>`).join("")}</tbody></table></div></div>
+    <div><h3 style="font-size:22px;margin-bottom:8px">Casos</h3><div class="scroll"><table class="tbl"><thead><tr><th>#</th><th>Caso</th><th class="c">Acierta</th></tr></thead><tbody>
+     ${items.map(x=>`<tr><td>${x.i+1}</td><td style="font-size:14px">${esc(x.txt)}</td><td class="c"><span class="lvl ${x.p===null?'lv0':x.p<.5?'lv1':x.p<.75?'lv2':'lv3'}">${x.p===null?"–":Math.round(x.p*100)+"%"}</span><br><span style="font-size:12px" class="muted">${x.n} resp.</span></td></tr>`).join("")}</tbody></table></div></div>
+   </div>`;
+}
+
+/* ===================== INICIO ===================== */
+if(QS.get("sala")&&QS.get("api"))liveStart();else players();
+
 </script>
 </body>
 </html>
